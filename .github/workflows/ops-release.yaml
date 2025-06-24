@@ -1,0 +1,168 @@
+name: Ops/Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      bumpType:
+        type: choice
+        description: Semver bump type to use
+        required: true
+        options:
+          - major
+          - minor
+          - patch
+        default: patch
+
+jobs:
+  create-tag:
+    runs-on: blacksmith-2vcpu-ubuntu-2204
+    outputs:
+      new_tag: ${{ steps.tag.outputs.new_tag }}
+      version_kind: ${{ steps.determine-version-kind.outputs.version_kind }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Bump version and push tag (dry run)
+        id: tag-dry-run
+        uses: anothrNick/github-tag-action@afe4b67b57b8ab0908e4767109a5342003639e2e # 1.69.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DEFAULT_BUMP: ${{ github.event.inputs.bumpType }}
+          TAG_CONTEXT: branch
+          RELEASE_BRANCHES: main,releases/.+
+          WITH_V: true
+          DRY_RUN: true
+
+      - id: parsed-release
+        uses: booxmedialtd/ws-action-parse-semver@7784200024d6b3fc01253e617ec0168daf603de3 # v1.4.7
+        with:
+          input_string: ${{ steps.tag-dry-run.outputs.new_tag }}
+
+      - name: Generate release
+        run: |
+          if [ "${{ github.ref }}" = "refs/heads/main" ]; then
+            if [ "${{ github.event.inputs.bumpType }}" = "patch" ]; then
+              echo "cannot make patch release from main branch"
+              exit 1
+            fi
+          
+            RELEASE_BRANCH="releases/${{ steps.parsed-release.outputs.major }}.${{ steps.parsed-release.outputs.minor }}.x"
+            git checkout -b ${RELEASE_BRANCH}
+            git push -u origin ${RELEASE_BRANCH}
+
+            {
+              echo '# :white_check_mark: Branch was created'
+              echo "[${RELEASE_BRANCH}](https://github.com/${{ github.repository }}/tree/${RELEASE_BRANCH})"
+            } >> "$GITHUB_STEP_SUMMARY"
+
+          elif [[ "${{ github.ref }}" = refs/heads/releases/* ]]; then
+            if [ "${{ github.event.inputs.bumpType }}" != "patch" ]; then
+              echo "cannot make major/minor release from release branch"
+              exit 1
+            fi
+          else
+            echo "can only release from main or releases/* branches"
+            exit 1
+          fi
+
+      - name: Bump version and push tag
+        id: tag
+        uses: anothrNick/github-tag-action@afe4b67b57b8ab0908e4767109a5342003639e2e # 1.69.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DEFAULT_BUMP: ${{ github.event.inputs.bumpType }}
+          TAG_CONTEXT: branch
+          RELEASE_BRANCHES: main,releases/.+
+          WITH_V: true
+
+      - name: Determine if the new tag is the new highest version
+        id: determine-version-kind
+        run: |
+          if [ "${{ steps.tag.outputs.new_tag }}" = "$(git tag -l 'v*' --sort='version:refname' | tail -n1)" ]; then
+            echo "version_kind=Current" >> "$GITHUB_OUTPUT"
+          else
+            echo "version_kind=Support" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: On Success
+        run: |
+          {
+            echo '# :white_check_mark: Tag was created'
+            echo 'Tag: [${{ steps.tag.outputs.new_tag }}](https://github.com/${{ github.repository }}/tree/${{ steps.tag.outputs.new_tag }})'
+            echo 'Diff: [${{ steps.tag.outputs.old_tag }}...${{ steps.tag.outputs.new_tag }}](https://github.com/${{ github.repository }}/compare/${{ steps.tag.outputs.old_tag }}...${{ steps.tag.outputs.new_tag }})'
+            echo 'Version kind: ${{ steps.determine-version-kind.outputs.version_kind }}'
+          } >> "$GITHUB_STEP_SUMMARY" 
+
+  open-merge-pr:
+    runs-on: blacksmith-2vcpu-ubuntu-2204
+    if:  ${{ startsWith(github.ref, 'refs/heads/releases/') && needs.create-tag.outputs.version_kind == 'Current' }}
+    needs: create-tag
+    env:
+      PR_BRANCH_NAME: '${{ needs.create-tag.outputs.new_tag }}-to-main'
+      PR_MERGE_COMMIT_MESSAGE: 'Merge `${{ needs.create-tag.outputs.new_tag }}` into `main`'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: refs/heads/main
+          fetch-depth: 0
+
+      - name: Create branch
+        id: create-branch
+        run: |
+          git switch "${PR_BRANCH_NAME}" || git checkout -b "${PR_BRANCH_NAME}"
+          git push -u origin "${PR_BRANCH_NAME}"
+
+      - name: Merge
+        id: merge
+        run: |
+          git config --global user.email "cicd@interoplabs.io"
+          git config --global user.name "CICD Bot"
+
+          git merge --log --stat --no-squash --verbose --no-ff -m "${PR_MERGE_COMMIT_MESSAGE}" ${{ github.sha }}
+          git push -u origin "${PR_BRANCH_NAME}"
+
+      - name: Create PR
+        id: create-pr
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          PR_URL=$(gh pr create -B main -H "${PR_BRANCH_NAME}" --title "${PR_MERGE_COMMIT_MESSAGE}" --body '' --label auto_rebase --label checks_pending)
+          echo "pr_url=${PR_URL}" >> "$GITHUB_OUTPUT"
+
+      - name: On Success
+        run: |
+          {
+            echo '# :white_check_mark: Merge PR was opened'
+            echo '${{ steps.create-pr.outputs.pr_url }}'
+          } >> "$GITHUB_STEP_SUMMARY" 
+
+      - name: On Failure
+        if: ${{ failure() && steps.merge.conclusion == 'failure' }}
+        run: |
+          {
+            echo '# :exclamation: Failed to open merge PR :exclamation:'
+            echo 'Merge PR should be manually created. To do that, run the following commands:'
+            echo '```bash'
+            if [ "${{ steps.create-branch.conclusion }}" = "success" ]; then
+              echo "git fetch"
+              echo "git switch \"${PR_BRANCH_NAME}\""
+              echo ""
+            else
+              echo "git checkout main"
+              echo "git pull"
+              echo "git checkout -b \"${PR_BRANCH_NAME}\""
+              echo ""
+            fi
+
+            echo "# If resolving conflicts, make sure to commit with the merge command"
+            echo "git merge --log --stat --no-squash --verbose --no-ff -m '${PR_MERGE_COMMIT_MESSAGE}' ${{ github.sha }}"
+            echo "git push -u origin \"${PR_BRANCH_NAME}\""
+            echo '```'
+
+            echo 'After pushing, click `[Re-run jobs] -> [Re-run failed jobs]` on this workflow run.'
+          } >> "$GITHUB_STEP_SUMMARY"
+

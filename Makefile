@@ -1,0 +1,21 @@
+FILES_WITH_GO_GENERATE = $(shell find . -name "*.go" | xargs grep -lw 'go:generate')
+
+.PHONY: test
+test:
+	go test ./...
+
+# Run all the code generators in the project
+.PHONY: $(FILES_WITH_GO_GENERATE)
+$(FILES_WITH_GO_GENERATE):
+	go generate $@
+
+.PHONY: go-generate
+go-generate: $(FILES_WITH_GO_GENERATE)
+
+.PHONY: golines
+golines:
+	find . -type f -name "*.go" -exec golines {} -w --max-len=140 \;
+
+.PHONY: revive
+revive:
+	@revive -config=revive.toml -formatter=unix ./...

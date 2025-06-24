@@ -1,0 +1,24 @@
+package api
+
+// GetFees returns Fees from the event
+// If Cost is Fees, then Fees is returned.
+// If Cost is Token, then Fees containing a single item is returned where ID equals ID of the event,
+// and .Meta.TxID equals .Meta.TxID of the event (if present).
+func (e *GasRefundedEvent) GetFees() (Fees, error) {
+	return createFees(e)
+}
+
+func (e *GasRefundedEvent) getEventID() string {
+	return e.EventID
+}
+
+func (e *GasRefundedEvent) getTxID() *string {
+	if e.Meta != nil && e.Meta.TxID != nil {
+		return e.Meta.TxID
+	}
+	return nil
+}
+
+func (e *GasRefundedEvent) getCost() Cost {
+	return e.Cost
+}
