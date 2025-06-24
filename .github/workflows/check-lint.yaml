@@ -1,0 +1,102 @@
+name: Checks/Linting
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, unlabeled]
+    paths:
+      - '.github/workflows/check-lint.yaml'
+      - 'go.mod'
+      - 'go.sum'
+      - '**.go'
+
+jobs:
+  revive:
+    runs-on: blacksmith-2vcpu-ubuntu-2204
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Go
+        uses: useblacksmith/setup-go@647ac649bd5b480f2a262e3e3e5f4d150ed452ad # v6
+        with:
+          go-version: "1.24.x"
+
+      - name: Set up ssh agent
+        uses: webfactory/ssh-agent@cb8b21017acfd319f0f4eb320ae495f22c36d0a7 # v0.5.2
+        with:
+          ssh-private-key: ${{ secrets.CICD_RSA_KEY }}
+
+      - name: Configure Git for private repos
+        run: |
+          git config --global url."git@github.com:axelarnetwork".insteadOf https://github.com/axelarnetwork
+
+      - name: Install revive
+        run: go install github.com/mgechev/revive@v1.3.9
+
+      - name: Run revive
+        run: |
+          make revive
+
+  staticcheck:
+    runs-on: blacksmith-2vcpu-ubuntu-2204
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Go
+        uses: useblacksmith/setup-go@647ac649bd5b480f2a262e3e3e5f4d150ed452ad # v6
+        with:
+          go-version: "1.24.x"
+
+      - name: Set up ssh agent
+        uses: webfactory/ssh-agent@cb8b21017acfd319f0f4eb320ae495f22c36d0a7 # v0.5.2
+        with:
+          ssh-private-key: ${{ secrets.CICD_RSA_KEY }}
+
+      - name: Configure Git for private repos
+        run: |
+          git config --global url."git@github.com:axelarnetwork".insteadOf https://github.com/axelarnetwork
+
+      - name: Install staticcheck
+        run: go install honnef.co/go/tools/cmd/staticcheck@2025.1
+
+      - name: Run staticcheck
+        run: staticcheck ./...
+
+  golines:
+    runs-on: blacksmith-2vcpu-ubuntu-2204
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Go
+        uses: useblacksmith/setup-go@647ac649bd5b480f2a262e3e3e5f4d150ed452ad # v6
+        with:
+          go-version: "1.24.x"
+
+      - name: Set up ssh agent
+        uses: webfactory/ssh-agent@cb8b21017acfd319f0f4eb320ae495f22c36d0a7 # v0.5.2
+        with:
+          ssh-private-key: ${{ secrets.CICD_RSA_KEY }}
+
+      - name: Configure Git for private repos
+        run: |
+          git config --global url."git@github.com:axelarnetwork".insteadOf https://github.com/axelarnetwork
+
+      - name: Install golines
+        run: go install github.com/segmentio/golines@latest
+
+      - name: Run golines
+        run: make golines
+
+      - name: Check for changes
+        run: |
+          if [ -n "$(git status --porcelain)" ]; then
+            echo Following files are changed...
+            git status
+            echo Changes:
+            git diff
+            exit 1;
+          else
+            exit 0;
+          fi

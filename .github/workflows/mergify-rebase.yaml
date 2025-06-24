@@ -1,0 +1,56 @@
+name: Mergify/Rebase
+
+on:
+  workflow_dispatch:
+    inputs:
+      head:
+        type: string
+        description: The branch to rebase
+        required: true
+      base:
+        type: string
+        description: The branch to rebase onto
+        required: true
+      rebase_merges:
+        type: boolean
+        description: Whether or not to pass `--rebase-merges` to `git rebase`
+        required: true
+        default: false
+
+jobs:
+  rebase:
+    runs-on: blacksmith-2vcpu-ubuntu-2204
+    steps:
+      - name: Checkout ${{ github.event.inputs.base }}
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.inputs.base }}
+
+      - name: Checkout ${{ github.event.inputs.head }}
+        run: |
+          git checkout ${{ github.event.inputs.head }}
+
+      - name: Rebase ${{ github.event.inputs.head }} onto ${{ github.event.inputs.base }}
+        id: rebase
+        run: |
+          git config --global user.email "cicd@interoplabs.io"
+          git config --global user.name "CICD Bot"
+
+          git rebase ${{ github.event.inputs.base }} ${{ github.event.inputs.rebase_merges && '--rebase-merges' }} --verbose
+          git push --force --verbose
+
+      - name: Add `checks_pending` label
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh pr edit ${{ github.event.inputs.head }} --add-label checks_pending
+
+      - name: Remove `auto_rebase` label if failed to rebase
+        if: ${{ failure() && steps.rebase.conclusion == 'failure' }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RUN_URL: "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+        run: |
+          gh pr edit ${{ github.event.inputs.head }} --remove-label auto_rebase --add-label rebase_failed
+          gh pr comment ${{ github.event.inputs.head }} --body "Failed to rebase ${{ github.event.inputs.head }} onto ${{ github.event.inputs.base }} ([details](${{ env.RUN_URL }})). Please rebase manually."
