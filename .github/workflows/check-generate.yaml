@@ -1,0 +1,45 @@
+name: Checks/Generate
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, unlabeled]
+    paths-ignore:
+      - .github/**
+
+jobs:
+  check-go-generate-up-to-date:
+    runs-on: blacksmith-4vcpu-ubuntu-2204
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Go
+        uses: useblacksmith/setup-go@647ac649bd5b480f2a262e3e3e5f4d150ed452ad # v6
+        with:
+          go-version: "1.24.x"
+
+      - name: Set up ssh agent
+        uses: webfactory/ssh-agent@cb8b21017acfd319f0f4eb320ae495f22c36d0a7 # v0.5.2
+        with:
+          ssh-private-key: ${{ secrets.CICD_RSA_KEY }}
+
+      - name: Install prereqs
+        run: |
+          git config --global url."git@github.com:axelarnetwork".insteadOf https://github.com/axelarnetwork
+
+      - name: Run go generate
+        run: make -j3 go-generate
+
+      - name: Check for changes
+        run: |
+          if [ -n "$(git status --porcelain)" ]; then
+            echo Following files are changed...
+            git status
+
+            echo Changes:
+            git diff
+
+            exit 1;
+          else
+            exit 0;
+          fi

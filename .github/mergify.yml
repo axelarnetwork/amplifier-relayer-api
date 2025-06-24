@@ -1,0 +1,201 @@
+shared:
+  mandatory_pr_checks_successful: &mandatory_pr_checks_successful
+    - "check-success=Rule: Check Conventional Commits (post_check)"
+
+    - or:
+      - "-files~=(go\\.mod|go\\.sum|\\.go)$"
+      - and:
+        - "check-success=revive"
+        - "check-success=staticcheck"
+        - "check-success=golines"
+        - "check-success=unit-tests"
+
+  base_is_main_or_release_branch: &base_is_main_or_release_branch
+    - or: ["base=main", "base~=^releases/.+"]
+  is_merge_pr: &is_merge_pr
+    - "title~=^Merge `v\\d+\\.\\d+\\.\\d+` into `main`$"
+    - "base=main"
+    - "head~=^v\\d+\\.\\d+\\.\\d+-to-main$"
+  is_not_merge_pr: &is_not_merge_pr
+    - or:
+        - "-title~=^Merge `v\\d+\\.\\d+\\.\\d+` into `main`$"
+        - "-base=main"
+        - "-head~=^v\\d+\\.\\d+\\.\\d+-to-main$"
+  sender_has_write_permission: &sender_has_write_permission ["sender-permission>=write"]
+  sender_is_author_or_has_write_permissions: &sender_is_author_with_write_permissions
+    - or:
+        - and: *sender_has_write_permission
+        - "sender={{author}}"
+  disabled: &disabled ["number<0"] # a condition that's always false
+
+commands_restrictions:
+  dequeue:
+    conditions: *disabled
+  queue:
+    conditions: *disabled
+  rebase:
+    conditions:
+      - and: *sender_is_author_with_write_permissions
+      - and: *is_not_merge_pr
+  requeue:
+    conditions: *disabled
+  squash:
+    conditions:
+      - and: *sender_is_author_with_write_permissions
+      - and: *is_not_merge_pr
+  update:
+    conditions:
+      - and: *sender_has_write_permission
+      - and: *is_not_merge_pr
+
+pull_request_rules:
+  - name: Check Conventional Commits
+    conditions: *base_is_main_or_release_branch
+    actions:
+      post_check:
+        success_conditions:
+          - or:
+              - "title~=^(fix|feat|docs|style|refactor|perf|test|build|ci|chore|revert)(?:\\(.+\\))?!?:\\s[\\da-z]"
+              - and: *is_merge_pr
+        title: |
+          {% if check_status == "success" %}
+          Title is valid
+          {% else %}
+          Title is invalid
+          {% endif %}
+        summary: |
+          {% if check_status == "failure" %}
+          Your pull request either must have title that follows [Conventional Commit](https://www.conventionalcommits.org/en/v1.0.0/), or be a merge PR.
+          {% endif %}
+          Title checked: 
+          ```
+          {{ title }}
+          ```
+
+  - name: "Automatically fast-forward merge PRs to main when checks passed and approved"
+    conditions:
+      - "-label=do_not_merge"
+      - "#approved-reviews-by>=1"
+      - "branch-protection-review-decision=APPROVED"
+      - "#commits-behind=0"
+      - "commits[*].commit_message~=(?m)^Merge `v\\d+\\.\\d+\\.\\d+` into `main`$"
+      - "-commits[*].commit_message~=(?m)^Merge branch '{{ base }}' into {{ head }}$"
+      - and: *mandatory_pr_checks_successful
+      - and: *is_merge_pr
+    actions:
+      merge:
+        method: fast-forward
+
+  - name: "Automatically squash non-merge PRs to main or releases/* when checks passed and approved"
+    conditions:
+      - "-label=do_not_merge"
+      - "-label=conflicts"
+      - or:
+          - and:
+            - "#approved-reviews-by>=1"
+            - "-head~=^mergify/bp/.+$"
+            - and: *base_is_main_or_release_branch
+          - and:
+            - "#approved-reviews-by>=2"
+            - "head~=^mergify/bp/.+$"
+      - "branch-protection-review-decision=APPROVED"
+      - and: *mandatory_pr_checks_successful
+      - and: *is_not_merge_pr
+    actions:
+      merge:
+        method: squash
+
+  - name: "Automatically rebase PRs"
+    conditions:
+      - "label=auto_rebase"
+      - "#commits-behind>0"
+      - "-closed"
+      - "-conflict"
+      - "-draft"
+    actions:
+      github_actions:
+        workflow:
+          dispatch:
+            - workflow: mergify-rebase.yaml
+              inputs:
+                base: "{{ base }}"
+                head: "{{ head }}"
+                rebase_merges: true
+
+  - name: "Comment instructions when there are merge commits from main in a merge PR"
+    conditions:
+      - or:
+          - "commits[*].commit_message~=(?m)^Merge branch '{{ base }}' into {{ head }}$"
+          - "-commits[*].commit_message~=(?m)^Merge `v\\d+\\.\\d+\\.\\d+` into `main`$"
+      - "-closed"
+      - "-draft"
+      - and: *is_merge_pr
+    actions:
+      comment:
+        message: |-
+          :exclamation: Merge PRs must not contain merge commits from `{{ base }}` and must contain a merge commit from `{{ head.split('-') | first }}`.
+
+          {% set commits_to_remove = commits | selectattr("commit_message", "==", "Merge branch '{}' into {}".format(base, head)) | list -%}
+          {% if commits_to_remove | count > 0 -%}
+          The following commits should be removed from `{{ head }}`:
+          {% for commit in commits_to_remove -%}
+          - {{ commit.commit_message }} ([{{ commit.sha }}](./commits/{{ commit.sha }}))
+          {% endfor -%}
+          {% endif -%}
+
+          To fix, run the following commands:
+          ```bash
+          git fetch
+
+          git switch "{{ base }}"
+          git pull
+
+          git switch "{{ head }}"
+          git reset "{{ base }}" --hard
+          git merge --log --stat --no-squash --verbose --no-ff -m '{{ title }}' "{{ head.split('-') | first }}"
+
+          git push origin "{{ head }}" --force
+          ```
+      label:
+        remove: [auto_rebase]
+
+  - name: "Comment instructions when cannot automatically rebase merge PRs to main"
+    conditions:
+      - "label=auto_rebase"
+      - "#commits-behind>0"
+      - "-closed"
+      - "conflict"
+      - "-draft"
+      - and: *is_merge_pr
+    actions:
+      comment:
+        message: |-
+          Automatic rebase isn't possible because of conflicts. They have to be resolved manually.
+
+          To do so, run the following commands:
+          ```bash
+          git fetch
+
+          git switch "{{ base }}"
+          git pull
+
+          git switch "{{ head }}"
+          git reset "{{ base }}" --hard
+          git merge --log --stat --no-squash --verbose --no-ff -m '{{ title }}' "{{ head.split('-') | first }}"
+
+          git push origin "{{ head }}" --force
+          ```
+      label:
+        remove: [auto_rebase]
+
+  - name: "Workaround for triggering PR checks when creating PRs or pushing from GitHub Actions"
+    conditions:
+      - "label=checks_pending"
+      - "-label=conflicts"
+      - "-closed"
+      - "-conflict"
+      - "-draft"
+    actions:
+      label:
+        remove:
+          - checks_pending
