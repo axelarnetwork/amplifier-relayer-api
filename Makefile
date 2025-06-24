@@ -13,6 +13,10 @@ $(FILES_WITH_GO_GENERATE):
 .PHONY: go-generate
 go-generate: $(FILES_WITH_GO_GENERATE)
 
+.PHONY: golines
+golines:
+	find . -type f -name "*.go" -exec golines {} -w --max-len=140 \;
+
 .PHONY: revive
 revive:
 	@revive -config=revive.toml -formatter=unix ./...
