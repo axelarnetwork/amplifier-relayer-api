@@ -1,9 +1,8 @@
-TEST_ARGS ?= -tags unit_test
 FILES_WITH_GO_GENERATE = $(shell find . -name "*.go" | xargs grep -lw 'go:generate')
 
-.PHONY: test-with-args
-test-with-args:
-	go test $(TEST_ARGS) ./...
+.PHONY: test
+test:
+	go test ./...
 
 # Run all the code generators in the project
 .PHONY: $(FILES_WITH_GO_GENERATE)
