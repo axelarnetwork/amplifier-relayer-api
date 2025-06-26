@@ -40,9 +40,15 @@ func TestTaskDiscriminatorValidation(t *testing.T) {
 				task := api.Task{}
 				err := task.FromExecuteTask(api.ExecuteTask{
 					AvailableGasBalance: api.Token{Amount: "1000", TokenID: nil},
-					Message:             api.Message{MessageID: "test", SourceChain: "test", SourceAddress: "test", DestinationAddress: "test", PayloadHash: []byte("test")},
-					Payload:             []byte("test"),
-					Type:                "EXECUTE",
+					Message: api.Message{
+						MessageID:          "test",
+						SourceChain:        "test",
+						SourceAddress:      "test",
+						DestinationAddress: "test",
+						PayloadHash:        []byte("test"),
+					},
+					Payload: []byte("test"),
+					Type:    "EXECUTE",
 				})
 				if err != nil {
 					t.Fatalf("Failed to setup task: %v", err)
@@ -61,9 +67,15 @@ func TestTaskDiscriminatorValidation(t *testing.T) {
 				task := api.Task{}
 				err := task.FromExecuteTask(api.ExecuteTask{
 					AvailableGasBalance: api.Token{Amount: "1000", TokenID: nil},
-					Message:             api.Message{MessageID: "test", SourceChain: "test", SourceAddress: "test", DestinationAddress: "test", PayloadHash: []byte("test")},
-					Payload:             []byte("test"),
-					Type:                "EXECUTE",
+					Message: api.Message{
+						MessageID:          "test",
+						SourceChain:        "test",
+						SourceAddress:      "test",
+						DestinationAddress: "test",
+						PayloadHash:        []byte("test"),
+					},
+					Payload: []byte("test"),
+					Type:    "EXECUTE",
 				})
 				if err != nil {
 					t.Fatalf("Failed to setup task: %v", err)
@@ -100,7 +112,13 @@ func TestTaskDiscriminatorValidation(t *testing.T) {
 			setupTask: func() api.Task {
 				task := api.Task{}
 				err := task.FromConstructProofTask(api.ConstructProofTask{
-					Message: api.Message{MessageID: "test", SourceChain: "test", SourceAddress: "test", DestinationAddress: "test", PayloadHash: []byte("test")},
+					Message: api.Message{
+						MessageID:          "test",
+						SourceChain:        "test",
+						SourceAddress:      "test",
+						DestinationAddress: "test",
+						PayloadHash:        []byte("test"),
+					},
 					Payload: []byte("test"),
 					Type:    "CONSTRUCT_PROOF",
 				})
@@ -121,9 +139,15 @@ func TestTaskDiscriminatorValidation(t *testing.T) {
 				task := api.Task{}
 				err := task.FromVerifyTask(api.VerifyTask{
 					DestinationChain: "test",
-					Message:          api.Message{MessageID: "test", SourceChain: "test", SourceAddress: "test", DestinationAddress: "test", PayloadHash: []byte("test")},
-					Payload:          []byte("test"),
-					Type:             "VERIFY",
+					Message: api.Message{
+						MessageID:          "test",
+						SourceChain:        "test",
+						SourceAddress:      "test",
+						DestinationAddress: "test",
+						PayloadHash:        []byte("test"),
+					},
+					Payload: []byte("test"),
+					Type:    "VERIFY",
 				})
 				if err != nil {
 					t.Fatalf("Failed to setup task: %v", err)
@@ -248,8 +272,14 @@ func TestEventDiscriminatorValidation(t *testing.T) {
 				err := event.FromCallEvent(api.CallEvent{
 					DestinationChain: "test-chain",
 					EventID:          "test-event",
-					Message:          api.Message{MessageID: "test", SourceChain: "test", SourceAddress: "test", DestinationAddress: "test", PayloadHash: []byte("test")},
-					Payload:          []byte("test"),
+					Message: api.Message{
+						MessageID:          "test",
+						SourceChain:        "test",
+						SourceAddress:      "test",
+						DestinationAddress: "test",
+						PayloadHash:        []byte("test"),
+					},
+					Payload: []byte("test"),
 				})
 				if err != nil {
 					t.Fatalf("Failed to setup event: %v", err)
@@ -269,7 +299,13 @@ func TestEventDiscriminatorValidation(t *testing.T) {
 				err := event.FromMessageApprovedEvent(api.MessageApprovedEvent{
 					Cost:    api.Cost{},
 					EventID: "test-event",
-					Message: api.Message{MessageID: "test", SourceChain: "test", SourceAddress: "test", DestinationAddress: "test", PayloadHash: []byte("test")},
+					Message: api.Message{
+						MessageID:          "test",
+						SourceChain:        "test",
+						SourceAddress:      "test",
+						DestinationAddress: "test",
+						PayloadHash:        []byte("test"),
+					},
 				})
 				if err != nil {
 					t.Fatalf("Failed to setup event: %v", err)
@@ -343,9 +379,15 @@ func TestTaskValueByDiscriminator(t *testing.T) {
 				task := api.Task{}
 				err := task.FromExecuteTask(api.ExecuteTask{
 					AvailableGasBalance: api.Token{Amount: "1000", TokenID: nil},
-					Message:             api.Message{MessageID: "test", SourceChain: "test", SourceAddress: "test", DestinationAddress: "test", PayloadHash: []byte("test")},
-					Payload:             []byte("test"),
-					Type:                "EXECUTE",
+					Message: api.Message{
+						MessageID:          "test",
+						SourceChain:        "test",
+						SourceAddress:      "test",
+						DestinationAddress: "test",
+						PayloadHash:        []byte("test"),
+					},
+					Payload: []byte("test"),
+					Type:    "EXECUTE",
 				})
 				if err != nil {
 					t.Fatalf("Failed to setup task: %v", err)
