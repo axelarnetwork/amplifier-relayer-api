@@ -250,8 +250,9 @@ type CannotRouteMessageReason string
 
 // ConstructProofTask defines model for ConstructProofTask.
 type ConstructProofTask struct {
-	Message Message `json:"message"`
-	Payload []byte  `json:"payload"`
+	Message Message  `json:"message"`
+	Payload []byte   `json:"payload"`
+	Type    TaskType `json:"type"`
 }
 
 // ContractQueryResponse defines model for ContractQueryResponse.
@@ -305,9 +306,10 @@ type EventType string
 
 // ExecuteTask defines model for ExecuteTask.
 type ExecuteTask struct {
-	AvailableGasBalance Token   `json:"availableGasBalance"`
-	Message             Message `json:"message"`
-	Payload             []byte  `json:"payload"`
+	AvailableGasBalance Token    `json:"availableGasBalance"`
+	Message             Message  `json:"message"`
+	Payload             []byte   `json:"payload"`
+	Type                TaskType `json:"type"`
 }
 
 // Fee defines model for Fee.
@@ -347,7 +349,8 @@ type GasRefundedEvent struct {
 
 // GatewayTransactionTask defines model for GatewayTransactionTask.
 type GatewayTransactionTask struct {
-	ExecuteData []byte `json:"executeData"`
+	ExecuteData []byte   `json:"executeData"`
+	Type        TaskType `json:"type"`
 }
 
 // GetTasksResult defines model for GetTasksResult.
@@ -526,6 +529,7 @@ type ReactToExpiredSigningSessionTask struct {
 	InvokedContractAddress Address     `json:"invokedContractAddress"`
 	RequestPayload         WasmRequest `json:"requestPayload"`
 	SessionID              uint64      `json:"sessionID"`
+	Type                   TaskType    `json:"type"`
 }
 
 // ReactToRetriablePollTask defines model for ReactToRetriablePollTask.
@@ -535,19 +539,22 @@ type ReactToRetriablePollTask struct {
 	PollID                 uint64               `json:"pollID"`
 	QuorumReachedEvents    []QuorumReachedEvent `json:"quorumReachedEvents"`
 	RequestPayload         WasmRequest          `json:"requestPayload"`
+	Type                   TaskType             `json:"type"`
 }
 
 // ReactToWasmEventTask defines model for ReactToWasmEventTask.
 type ReactToWasmEventTask struct {
 	Event  WasmEvent `json:"event"`
 	Height int64     `json:"height"`
+	Type   TaskType  `json:"type"`
 }
 
 // RefundTask defines model for RefundTask.
 type RefundTask struct {
-	Message                Message `json:"message"`
-	RefundRecipientAddress Address `json:"refundRecipientAddress"`
-	RemainingGasBalance    Token   `json:"remainingGasBalance"`
+	Message                Message  `json:"message"`
+	RefundRecipientAddress Address  `json:"refundRecipientAddress"`
+	RemainingGasBalance    Token    `json:"remainingGasBalance"`
+	Type                   TaskType `json:"type"`
 }
 
 // SignersRotatedEvent defines model for SignersRotatedEvent.
@@ -579,6 +586,7 @@ type StorePayloadResult struct {
 
 // Task defines model for Task.
 type Task struct {
+	Type  TaskType `json:"type"`
 	union json.RawMessage
 }
 
@@ -618,9 +626,10 @@ type VerificationStatus string
 
 // VerifyTask defines model for VerifyTask.
 type VerifyTask struct {
-	DestinationChain string  `json:"destinationChain"`
-	Message          Message `json:"message"`
-	Payload          []byte  `json:"payload"`
+	DestinationChain string   `json:"destinationChain"`
+	Message          Message  `json:"message"`
+	Payload          []byte   `json:"payload"`
+	Type             TaskType `json:"type"`
 }
 
 // WasmEvent defines model for WasmEvent.
@@ -675,52 +684,62 @@ type QueryContractStateJSONRequestBody = WasmRequest
 
 // AsToken returns the union data inside the Cost as a Token
 func (t Cost) AsToken() (Token, error) {
+	var err error
 	var body Token
-	err := json.Unmarshal(t.union, &body)
+	err = json.Unmarshal(t.union, &body)
 	return body, err
 }
 
 // FromToken overwrites any union data inside the Cost as the provided Token
 func (t *Cost) FromToken(v Token) error {
-	b, err := json.Marshal(v)
+	var err error
+	var b []byte
+	b, err = json.Marshal(v)
 	t.union = b
 	return err
 }
 
 // MergeToken performs a merge with any union data inside the Cost, using the provided Token
 func (t *Cost) MergeToken(v Token) error {
-	b, err := json.Marshal(v)
+	var err error
+	var b []byte
+	var merged []byte
+	b, err = json.Marshal(v)
 	if err != nil {
 		return err
 	}
-
-	merged, err := runtime.JSONMerge(t.union, b)
+	merged, err = runtime.JSONMerge(t.union, b)
 	t.union = merged
 	return err
 }
 
 // AsFees returns the union data inside the Cost as a Fees
 func (t Cost) AsFees() (Fees, error) {
+	var err error
 	var body Fees
-	err := json.Unmarshal(t.union, &body)
+	err = json.Unmarshal(t.union, &body)
 	return body, err
 }
 
 // FromFees overwrites any union data inside the Cost as the provided Fees
 func (t *Cost) FromFees(v Fees) error {
-	b, err := json.Marshal(v)
+	var err error
+	var b []byte
+	b, err = json.Marshal(v)
 	t.union = b
 	return err
 }
 
 // MergeFees performs a merge with any union data inside the Cost, using the provided Fees
 func (t *Cost) MergeFees(v Fees) error {
-	b, err := json.Marshal(v)
+	var err error
+	var b []byte
+	var merged []byte
+	b, err = json.Marshal(v)
 	if err != nil {
 		return err
 	}
-
-	merged, err := runtime.JSONMerge(t.union, b)
+	merged, err = runtime.JSONMerge(t.union, b)
 	t.union = merged
 	return err
 }
@@ -737,515 +756,721 @@ func (t *Cost) UnmarshalJSON(b []byte) error {
 
 // AsGasCreditEvent returns the union data inside the Event as a GasCreditEvent
 func (t Event) AsGasCreditEvent() (GasCreditEvent, error) {
+	var err error
+	discriminator, err := t.Discriminator()
+	if err != nil {
+		return GasCreditEvent{}, fmt.Errorf("failed to get discriminator: %w", err)
+	}
+	if discriminator != "GAS_CREDIT" {
+		return GasCreditEvent{}, fmt.Errorf("cannot cast Event to GasCreditEvent, discriminator is %s", discriminator)
+	}
 	var body GasCreditEvent
-	err := json.Unmarshal(t.union, &body)
+	err = json.Unmarshal(t.union, &body)
 	return body, err
 }
 
 // FromGasCreditEvent overwrites any union data inside the Event as the provided GasCreditEvent
 func (t *Event) FromGasCreditEvent(v GasCreditEvent) error {
+	var err error
+	var b []byte
 	t.Type = "GAS_CREDIT"
 
-	b, err := json.Marshal(v)
+	b, err = json.Marshal(v)
 	t.union = b
 	return err
 }
 
 // MergeGasCreditEvent performs a merge with any union data inside the Event, using the provided GasCreditEvent
 func (t *Event) MergeGasCreditEvent(v GasCreditEvent) error {
+	var err error
+	var b []byte
+	var merged []byte
 	t.Type = "GAS_CREDIT"
 
-	b, err := json.Marshal(v)
+	b, err = json.Marshal(v)
 	if err != nil {
 		return err
 	}
-
-	merged, err := runtime.JSONMerge(t.union, b)
+	merged, err = runtime.JSONMerge(t.union, b)
 	t.union = merged
 	return err
 }
 
 // AsGasRefundedEvent returns the union data inside the Event as a GasRefundedEvent
 func (t Event) AsGasRefundedEvent() (GasRefundedEvent, error) {
+	var err error
+	discriminator, err := t.Discriminator()
+	if err != nil {
+		return GasRefundedEvent{}, fmt.Errorf("failed to get discriminator: %w", err)
+	}
+	if discriminator != "GAS_REFUNDED" {
+		return GasRefundedEvent{}, fmt.Errorf("cannot cast Event to GasRefundedEvent, discriminator is %s", discriminator)
+	}
 	var body GasRefundedEvent
-	err := json.Unmarshal(t.union, &body)
+	err = json.Unmarshal(t.union, &body)
 	return body, err
 }
 
 // FromGasRefundedEvent overwrites any union data inside the Event as the provided GasRefundedEvent
 func (t *Event) FromGasRefundedEvent(v GasRefundedEvent) error {
+	var err error
+	var b []byte
 	t.Type = "GAS_REFUNDED"
 
-	b, err := json.Marshal(v)
+	b, err = json.Marshal(v)
 	t.union = b
 	return err
 }
 
 // MergeGasRefundedEvent performs a merge with any union data inside the Event, using the provided GasRefundedEvent
 func (t *Event) MergeGasRefundedEvent(v GasRefundedEvent) error {
+	var err error
+	var b []byte
+	var merged []byte
 	t.Type = "GAS_REFUNDED"
 
-	b, err := json.Marshal(v)
+	b, err = json.Marshal(v)
 	if err != nil {
 		return err
 	}
-
-	merged, err := runtime.JSONMerge(t.union, b)
+	merged, err = runtime.JSONMerge(t.union, b)
 	t.union = merged
 	return err
 }
 
 // AsCallEvent returns the union data inside the Event as a CallEvent
 func (t Event) AsCallEvent() (CallEvent, error) {
+	var err error
+	discriminator, err := t.Discriminator()
+	if err != nil {
+		return CallEvent{}, fmt.Errorf("failed to get discriminator: %w", err)
+	}
+	if discriminator != "CALL" {
+		return CallEvent{}, fmt.Errorf("cannot cast Event to CallEvent, discriminator is %s", discriminator)
+	}
 	var body CallEvent
-	err := json.Unmarshal(t.union, &body)
+	err = json.Unmarshal(t.union, &body)
 	return body, err
 }
 
 // FromCallEvent overwrites any union data inside the Event as the provided CallEvent
 func (t *Event) FromCallEvent(v CallEvent) error {
+	var err error
+	var b []byte
 	t.Type = "CALL"
 
-	b, err := json.Marshal(v)
+	b, err = json.Marshal(v)
 	t.union = b
 	return err
 }
 
 // MergeCallEvent performs a merge with any union data inside the Event, using the provided CallEvent
 func (t *Event) MergeCallEvent(v CallEvent) error {
+	var err error
+	var b []byte
+	var merged []byte
 	t.Type = "CALL"
 
-	b, err := json.Marshal(v)
+	b, err = json.Marshal(v)
 	if err != nil {
 		return err
 	}
-
-	merged, err := runtime.JSONMerge(t.union, b)
+	merged, err = runtime.JSONMerge(t.union, b)
 	t.union = merged
 	return err
 }
 
 // AsMessageApprovedEvent returns the union data inside the Event as a MessageApprovedEvent
 func (t Event) AsMessageApprovedEvent() (MessageApprovedEvent, error) {
+	var err error
+	discriminator, err := t.Discriminator()
+	if err != nil {
+		return MessageApprovedEvent{}, fmt.Errorf("failed to get discriminator: %w", err)
+	}
+	if discriminator != "MESSAGE_APPROVED" {
+		return MessageApprovedEvent{}, fmt.Errorf("cannot cast Event to MessageApprovedEvent, discriminator is %s", discriminator)
+	}
 	var body MessageApprovedEvent
-	err := json.Unmarshal(t.union, &body)
+	err = json.Unmarshal(t.union, &body)
 	return body, err
 }
 
 // FromMessageApprovedEvent overwrites any union data inside the Event as the provided MessageApprovedEvent
 func (t *Event) FromMessageApprovedEvent(v MessageApprovedEvent) error {
+	var err error
+	var b []byte
 	t.Type = "MESSAGE_APPROVED"
 
-	b, err := json.Marshal(v)
+	b, err = json.Marshal(v)
 	t.union = b
 	return err
 }
 
 // MergeMessageApprovedEvent performs a merge with any union data inside the Event, using the provided MessageApprovedEvent
 func (t *Event) MergeMessageApprovedEvent(v MessageApprovedEvent) error {
+	var err error
+	var b []byte
+	var merged []byte
 	t.Type = "MESSAGE_APPROVED"
 
-	b, err := json.Marshal(v)
+	b, err = json.Marshal(v)
 	if err != nil {
 		return err
 	}
-
-	merged, err := runtime.JSONMerge(t.union, b)
+	merged, err = runtime.JSONMerge(t.union, b)
 	t.union = merged
 	return err
 }
 
 // AsMessageExecutedEvent returns the union data inside the Event as a MessageExecutedEvent
 func (t Event) AsMessageExecutedEvent() (MessageExecutedEvent, error) {
+	var err error
+	discriminator, err := t.Discriminator()
+	if err != nil {
+		return MessageExecutedEvent{}, fmt.Errorf("failed to get discriminator: %w", err)
+	}
+	if discriminator != "MESSAGE_EXECUTED" {
+		return MessageExecutedEvent{}, fmt.Errorf("cannot cast Event to MessageExecutedEvent, discriminator is %s", discriminator)
+	}
 	var body MessageExecutedEvent
-	err := json.Unmarshal(t.union, &body)
+	err = json.Unmarshal(t.union, &body)
 	return body, err
 }
 
 // FromMessageExecutedEvent overwrites any union data inside the Event as the provided MessageExecutedEvent
 func (t *Event) FromMessageExecutedEvent(v MessageExecutedEvent) error {
+	var err error
+	var b []byte
 	t.Type = "MESSAGE_EXECUTED"
 
-	b, err := json.Marshal(v)
+	b, err = json.Marshal(v)
 	t.union = b
 	return err
 }
 
 // MergeMessageExecutedEvent performs a merge with any union data inside the Event, using the provided MessageExecutedEvent
 func (t *Event) MergeMessageExecutedEvent(v MessageExecutedEvent) error {
+	var err error
+	var b []byte
+	var merged []byte
 	t.Type = "MESSAGE_EXECUTED"
 
-	b, err := json.Marshal(v)
+	b, err = json.Marshal(v)
 	if err != nil {
 		return err
 	}
-
-	merged, err := runtime.JSONMerge(t.union, b)
+	merged, err = runtime.JSONMerge(t.union, b)
 	t.union = merged
 	return err
 }
 
 // AsMessageExecutedEventV2 returns the union data inside the Event as a MessageExecutedEventV2
 func (t Event) AsMessageExecutedEventV2() (MessageExecutedEventV2, error) {
+	var err error
+	discriminator, err := t.Discriminator()
+	if err != nil {
+		return MessageExecutedEventV2{}, fmt.Errorf("failed to get discriminator: %w", err)
+	}
+	if discriminator != "MESSAGE_EXECUTED/V2" {
+		return MessageExecutedEventV2{}, fmt.Errorf("cannot cast Event to MessageExecutedEventV2, discriminator is %s", discriminator)
+	}
 	var body MessageExecutedEventV2
-	err := json.Unmarshal(t.union, &body)
+	err = json.Unmarshal(t.union, &body)
 	return body, err
 }
 
 // FromMessageExecutedEventV2 overwrites any union data inside the Event as the provided MessageExecutedEventV2
 func (t *Event) FromMessageExecutedEventV2(v MessageExecutedEventV2) error {
+	var err error
+	var b []byte
 	t.Type = "MESSAGE_EXECUTED/V2"
 
-	b, err := json.Marshal(v)
+	b, err = json.Marshal(v)
 	t.union = b
 	return err
 }
 
 // MergeMessageExecutedEventV2 performs a merge with any union data inside the Event, using the provided MessageExecutedEventV2
 func (t *Event) MergeMessageExecutedEventV2(v MessageExecutedEventV2) error {
+	var err error
+	var b []byte
+	var merged []byte
 	t.Type = "MESSAGE_EXECUTED/V2"
 
-	b, err := json.Marshal(v)
+	b, err = json.Marshal(v)
 	if err != nil {
 		return err
 	}
-
-	merged, err := runtime.JSONMerge(t.union, b)
+	merged, err = runtime.JSONMerge(t.union, b)
 	t.union = merged
 	return err
 }
 
 // AsCannotExecuteMessageEvent returns the union data inside the Event as a CannotExecuteMessageEvent
 func (t Event) AsCannotExecuteMessageEvent() (CannotExecuteMessageEvent, error) {
+	var err error
+	discriminator, err := t.Discriminator()
+	if err != nil {
+		return CannotExecuteMessageEvent{}, fmt.Errorf("failed to get discriminator: %w", err)
+	}
+	if discriminator != "CANNOT_EXECUTE_MESSAGE" {
+		return CannotExecuteMessageEvent{}, fmt.Errorf("cannot cast Event to CannotExecuteMessageEvent, discriminator is %s", discriminator)
+	}
 	var body CannotExecuteMessageEvent
-	err := json.Unmarshal(t.union, &body)
+	err = json.Unmarshal(t.union, &body)
 	return body, err
 }
 
 // FromCannotExecuteMessageEvent overwrites any union data inside the Event as the provided CannotExecuteMessageEvent
 func (t *Event) FromCannotExecuteMessageEvent(v CannotExecuteMessageEvent) error {
+	var err error
+	var b []byte
 	t.Type = "CANNOT_EXECUTE_MESSAGE"
 
-	b, err := json.Marshal(v)
+	b, err = json.Marshal(v)
 	t.union = b
 	return err
 }
 
 // MergeCannotExecuteMessageEvent performs a merge with any union data inside the Event, using the provided CannotExecuteMessageEvent
 func (t *Event) MergeCannotExecuteMessageEvent(v CannotExecuteMessageEvent) error {
+	var err error
+	var b []byte
+	var merged []byte
 	t.Type = "CANNOT_EXECUTE_MESSAGE"
 
-	b, err := json.Marshal(v)
+	b, err = json.Marshal(v)
 	if err != nil {
 		return err
 	}
-
-	merged, err := runtime.JSONMerge(t.union, b)
+	merged, err = runtime.JSONMerge(t.union, b)
 	t.union = merged
 	return err
 }
 
 // AsCannotExecuteMessageEventV2 returns the union data inside the Event as a CannotExecuteMessageEventV2
 func (t Event) AsCannotExecuteMessageEventV2() (CannotExecuteMessageEventV2, error) {
+	var err error
+	discriminator, err := t.Discriminator()
+	if err != nil {
+		return CannotExecuteMessageEventV2{}, fmt.Errorf("failed to get discriminator: %w", err)
+	}
+	if discriminator != "CANNOT_EXECUTE_MESSAGE/V2" {
+		return CannotExecuteMessageEventV2{}, fmt.Errorf("cannot cast Event to CannotExecuteMessageEventV2, discriminator is %s", discriminator)
+	}
 	var body CannotExecuteMessageEventV2
-	err := json.Unmarshal(t.union, &body)
+	err = json.Unmarshal(t.union, &body)
 	return body, err
 }
 
 // FromCannotExecuteMessageEventV2 overwrites any union data inside the Event as the provided CannotExecuteMessageEventV2
 func (t *Event) FromCannotExecuteMessageEventV2(v CannotExecuteMessageEventV2) error {
+	var err error
+	var b []byte
 	t.Type = "CANNOT_EXECUTE_MESSAGE/V2"
 
-	b, err := json.Marshal(v)
+	b, err = json.Marshal(v)
 	t.union = b
 	return err
 }
 
 // MergeCannotExecuteMessageEventV2 performs a merge with any union data inside the Event, using the provided CannotExecuteMessageEventV2
 func (t *Event) MergeCannotExecuteMessageEventV2(v CannotExecuteMessageEventV2) error {
+	var err error
+	var b []byte
+	var merged []byte
 	t.Type = "CANNOT_EXECUTE_MESSAGE/V2"
 
-	b, err := json.Marshal(v)
+	b, err = json.Marshal(v)
 	if err != nil {
 		return err
 	}
-
-	merged, err := runtime.JSONMerge(t.union, b)
+	merged, err = runtime.JSONMerge(t.union, b)
 	t.union = merged
 	return err
 }
 
 // AsCannotRouteMessageEvent returns the union data inside the Event as a CannotRouteMessageEvent
 func (t Event) AsCannotRouteMessageEvent() (CannotRouteMessageEvent, error) {
+	var err error
+	discriminator, err := t.Discriminator()
+	if err != nil {
+		return CannotRouteMessageEvent{}, fmt.Errorf("failed to get discriminator: %w", err)
+	}
+	if discriminator != "CANNOT_ROUTE_MESSAGE" {
+		return CannotRouteMessageEvent{}, fmt.Errorf("cannot cast Event to CannotRouteMessageEvent, discriminator is %s", discriminator)
+	}
 	var body CannotRouteMessageEvent
-	err := json.Unmarshal(t.union, &body)
+	err = json.Unmarshal(t.union, &body)
 	return body, err
 }
 
 // FromCannotRouteMessageEvent overwrites any union data inside the Event as the provided CannotRouteMessageEvent
 func (t *Event) FromCannotRouteMessageEvent(v CannotRouteMessageEvent) error {
+	var err error
+	var b []byte
 	t.Type = "CANNOT_ROUTE_MESSAGE"
 
-	b, err := json.Marshal(v)
+	b, err = json.Marshal(v)
 	t.union = b
 	return err
 }
 
 // MergeCannotRouteMessageEvent performs a merge with any union data inside the Event, using the provided CannotRouteMessageEvent
 func (t *Event) MergeCannotRouteMessageEvent(v CannotRouteMessageEvent) error {
+	var err error
+	var b []byte
+	var merged []byte
 	t.Type = "CANNOT_ROUTE_MESSAGE"
 
-	b, err := json.Marshal(v)
+	b, err = json.Marshal(v)
 	if err != nil {
 		return err
 	}
-
-	merged, err := runtime.JSONMerge(t.union, b)
+	merged, err = runtime.JSONMerge(t.union, b)
 	t.union = merged
 	return err
 }
 
 // AsCannotExecuteTaskEvent returns the union data inside the Event as a CannotExecuteTaskEvent
 func (t Event) AsCannotExecuteTaskEvent() (CannotExecuteTaskEvent, error) {
+	var err error
+	discriminator, err := t.Discriminator()
+	if err != nil {
+		return CannotExecuteTaskEvent{}, fmt.Errorf("failed to get discriminator: %w", err)
+	}
+	if discriminator != "CANNOT_EXECUTE_TASK" {
+		return CannotExecuteTaskEvent{}, fmt.Errorf("cannot cast Event to CannotExecuteTaskEvent, discriminator is %s", discriminator)
+	}
 	var body CannotExecuteTaskEvent
-	err := json.Unmarshal(t.union, &body)
+	err = json.Unmarshal(t.union, &body)
 	return body, err
 }
 
 // FromCannotExecuteTaskEvent overwrites any union data inside the Event as the provided CannotExecuteTaskEvent
 func (t *Event) FromCannotExecuteTaskEvent(v CannotExecuteTaskEvent) error {
+	var err error
+	var b []byte
 	t.Type = "CANNOT_EXECUTE_TASK"
 
-	b, err := json.Marshal(v)
+	b, err = json.Marshal(v)
 	t.union = b
 	return err
 }
 
 // MergeCannotExecuteTaskEvent performs a merge with any union data inside the Event, using the provided CannotExecuteTaskEvent
 func (t *Event) MergeCannotExecuteTaskEvent(v CannotExecuteTaskEvent) error {
+	var err error
+	var b []byte
+	var merged []byte
 	t.Type = "CANNOT_EXECUTE_TASK"
 
-	b, err := json.Marshal(v)
+	b, err = json.Marshal(v)
 	if err != nil {
 		return err
 	}
-
-	merged, err := runtime.JSONMerge(t.union, b)
+	merged, err = runtime.JSONMerge(t.union, b)
 	t.union = merged
 	return err
 }
 
 // AsSignersRotatedEvent returns the union data inside the Event as a SignersRotatedEvent
 func (t Event) AsSignersRotatedEvent() (SignersRotatedEvent, error) {
+	var err error
+	discriminator, err := t.Discriminator()
+	if err != nil {
+		return SignersRotatedEvent{}, fmt.Errorf("failed to get discriminator: %w", err)
+	}
+	if discriminator != "SIGNERS_ROTATED" {
+		return SignersRotatedEvent{}, fmt.Errorf("cannot cast Event to SignersRotatedEvent, discriminator is %s", discriminator)
+	}
 	var body SignersRotatedEvent
-	err := json.Unmarshal(t.union, &body)
+	err = json.Unmarshal(t.union, &body)
 	return body, err
 }
 
 // FromSignersRotatedEvent overwrites any union data inside the Event as the provided SignersRotatedEvent
 func (t *Event) FromSignersRotatedEvent(v SignersRotatedEvent) error {
+	var err error
+	var b []byte
 	t.Type = "SIGNERS_ROTATED"
 
-	b, err := json.Marshal(v)
+	b, err = json.Marshal(v)
 	t.union = b
 	return err
 }
 
 // MergeSignersRotatedEvent performs a merge with any union data inside the Event, using the provided SignersRotatedEvent
 func (t *Event) MergeSignersRotatedEvent(v SignersRotatedEvent) error {
+	var err error
+	var b []byte
+	var merged []byte
 	t.Type = "SIGNERS_ROTATED"
 
-	b, err := json.Marshal(v)
+	b, err = json.Marshal(v)
 	if err != nil {
 		return err
 	}
-
-	merged, err := runtime.JSONMerge(t.union, b)
+	merged, err = runtime.JSONMerge(t.union, b)
 	t.union = merged
 	return err
 }
 
 // AsITSLinkTokenStartedEvent returns the union data inside the Event as a ITSLinkTokenStartedEvent
 func (t Event) AsITSLinkTokenStartedEvent() (ITSLinkTokenStartedEvent, error) {
+	var err error
+	discriminator, err := t.Discriminator()
+	if err != nil {
+		return ITSLinkTokenStartedEvent{}, fmt.Errorf("failed to get discriminator: %w", err)
+	}
+	if discriminator != "ITS/LINK_TOKEN_STARTED" {
+		return ITSLinkTokenStartedEvent{}, fmt.Errorf("cannot cast Event to ITSLinkTokenStartedEvent, discriminator is %s", discriminator)
+	}
 	var body ITSLinkTokenStartedEvent
-	err := json.Unmarshal(t.union, &body)
+	err = json.Unmarshal(t.union, &body)
 	return body, err
 }
 
 // FromITSLinkTokenStartedEvent overwrites any union data inside the Event as the provided ITSLinkTokenStartedEvent
 func (t *Event) FromITSLinkTokenStartedEvent(v ITSLinkTokenStartedEvent) error {
+	var err error
+	var b []byte
 	t.Type = "ITS/LINK_TOKEN_STARTED"
 
-	b, err := json.Marshal(v)
+	b, err = json.Marshal(v)
 	t.union = b
 	return err
 }
 
 // MergeITSLinkTokenStartedEvent performs a merge with any union data inside the Event, using the provided ITSLinkTokenStartedEvent
 func (t *Event) MergeITSLinkTokenStartedEvent(v ITSLinkTokenStartedEvent) error {
+	var err error
+	var b []byte
+	var merged []byte
 	t.Type = "ITS/LINK_TOKEN_STARTED"
 
-	b, err := json.Marshal(v)
+	b, err = json.Marshal(v)
 	if err != nil {
 		return err
 	}
-
-	merged, err := runtime.JSONMerge(t.union, b)
+	merged, err = runtime.JSONMerge(t.union, b)
 	t.union = merged
 	return err
 }
 
 // AsITSTokenMetadataRegisteredEvent returns the union data inside the Event as a ITSTokenMetadataRegisteredEvent
 func (t Event) AsITSTokenMetadataRegisteredEvent() (ITSTokenMetadataRegisteredEvent, error) {
+	var err error
+	discriminator, err := t.Discriminator()
+	if err != nil {
+		return ITSTokenMetadataRegisteredEvent{}, fmt.Errorf("failed to get discriminator: %w", err)
+	}
+	if discriminator != "ITS/TOKEN_METADATA_REGISTERED" {
+		return ITSTokenMetadataRegisteredEvent{}, fmt.Errorf("cannot cast Event to ITSTokenMetadataRegisteredEvent, discriminator is %s", discriminator)
+	}
 	var body ITSTokenMetadataRegisteredEvent
-	err := json.Unmarshal(t.union, &body)
+	err = json.Unmarshal(t.union, &body)
 	return body, err
 }
 
 // FromITSTokenMetadataRegisteredEvent overwrites any union data inside the Event as the provided ITSTokenMetadataRegisteredEvent
 func (t *Event) FromITSTokenMetadataRegisteredEvent(v ITSTokenMetadataRegisteredEvent) error {
+	var err error
+	var b []byte
 	t.Type = "ITS/TOKEN_METADATA_REGISTERED"
 
-	b, err := json.Marshal(v)
+	b, err = json.Marshal(v)
 	t.union = b
 	return err
 }
 
 // MergeITSTokenMetadataRegisteredEvent performs a merge with any union data inside the Event, using the provided ITSTokenMetadataRegisteredEvent
 func (t *Event) MergeITSTokenMetadataRegisteredEvent(v ITSTokenMetadataRegisteredEvent) error {
+	var err error
+	var b []byte
+	var merged []byte
 	t.Type = "ITS/TOKEN_METADATA_REGISTERED"
 
-	b, err := json.Marshal(v)
+	b, err = json.Marshal(v)
 	if err != nil {
 		return err
 	}
-
-	merged, err := runtime.JSONMerge(t.union, b)
+	merged, err = runtime.JSONMerge(t.union, b)
 	t.union = merged
 	return err
 }
 
 // AsITSInterchainTokenDeploymentStartedEvent returns the union data inside the Event as a ITSInterchainTokenDeploymentStartedEvent
 func (t Event) AsITSInterchainTokenDeploymentStartedEvent() (ITSInterchainTokenDeploymentStartedEvent, error) {
+	var err error
+	discriminator, err := t.Discriminator()
+	if err != nil {
+		return ITSInterchainTokenDeploymentStartedEvent{}, fmt.Errorf("failed to get discriminator: %w", err)
+	}
+	if discriminator != "ITS/INTERCHAIN_TOKEN_DEPLOYMENT_STARTED" {
+		return ITSInterchainTokenDeploymentStartedEvent{}, fmt.Errorf("cannot cast Event to ITSInterchainTokenDeploymentStartedEvent, discriminator is %s", discriminator)
+	}
 	var body ITSInterchainTokenDeploymentStartedEvent
-	err := json.Unmarshal(t.union, &body)
+	err = json.Unmarshal(t.union, &body)
 	return body, err
 }
 
 // FromITSInterchainTokenDeploymentStartedEvent overwrites any union data inside the Event as the provided ITSInterchainTokenDeploymentStartedEvent
 func (t *Event) FromITSInterchainTokenDeploymentStartedEvent(v ITSInterchainTokenDeploymentStartedEvent) error {
+	var err error
+	var b []byte
 	t.Type = "ITS/INTERCHAIN_TOKEN_DEPLOYMENT_STARTED"
 
-	b, err := json.Marshal(v)
+	b, err = json.Marshal(v)
 	t.union = b
 	return err
 }
 
 // MergeITSInterchainTokenDeploymentStartedEvent performs a merge with any union data inside the Event, using the provided ITSInterchainTokenDeploymentStartedEvent
 func (t *Event) MergeITSInterchainTokenDeploymentStartedEvent(v ITSInterchainTokenDeploymentStartedEvent) error {
+	var err error
+	var b []byte
+	var merged []byte
 	t.Type = "ITS/INTERCHAIN_TOKEN_DEPLOYMENT_STARTED"
 
-	b, err := json.Marshal(v)
+	b, err = json.Marshal(v)
 	if err != nil {
 		return err
 	}
-
-	merged, err := runtime.JSONMerge(t.union, b)
+	merged, err = runtime.JSONMerge(t.union, b)
 	t.union = merged
 	return err
 }
 
 // AsITSInterchainTransferEvent returns the union data inside the Event as a ITSInterchainTransferEvent
 func (t Event) AsITSInterchainTransferEvent() (ITSInterchainTransferEvent, error) {
+	var err error
+	discriminator, err := t.Discriminator()
+	if err != nil {
+		return ITSInterchainTransferEvent{}, fmt.Errorf("failed to get discriminator: %w", err)
+	}
+	if discriminator != "ITS/INTERCHAIN_TRANSFER" {
+		return ITSInterchainTransferEvent{}, fmt.Errorf("cannot cast Event to ITSInterchainTransferEvent, discriminator is %s", discriminator)
+	}
 	var body ITSInterchainTransferEvent
-	err := json.Unmarshal(t.union, &body)
+	err = json.Unmarshal(t.union, &body)
 	return body, err
 }
 
 // FromITSInterchainTransferEvent overwrites any union data inside the Event as the provided ITSInterchainTransferEvent
 func (t *Event) FromITSInterchainTransferEvent(v ITSInterchainTransferEvent) error {
+	var err error
+	var b []byte
 	t.Type = "ITS/INTERCHAIN_TRANSFER"
 
-	b, err := json.Marshal(v)
+	b, err = json.Marshal(v)
 	t.union = b
 	return err
 }
 
 // MergeITSInterchainTransferEvent performs a merge with any union data inside the Event, using the provided ITSInterchainTransferEvent
 func (t *Event) MergeITSInterchainTransferEvent(v ITSInterchainTransferEvent) error {
+	var err error
+	var b []byte
+	var merged []byte
 	t.Type = "ITS/INTERCHAIN_TRANSFER"
 
-	b, err := json.Marshal(v)
+	b, err = json.Marshal(v)
 	if err != nil {
 		return err
 	}
-
-	merged, err := runtime.JSONMerge(t.union, b)
+	merged, err = runtime.JSONMerge(t.union, b)
 	t.union = merged
 	return err
 }
 
 // AsAppInterchainTransferSentEvent returns the union data inside the Event as a AppInterchainTransferSentEvent
 func (t Event) AsAppInterchainTransferSentEvent() (AppInterchainTransferSentEvent, error) {
+	var err error
+	discriminator, err := t.Discriminator()
+	if err != nil {
+		return AppInterchainTransferSentEvent{}, fmt.Errorf("failed to get discriminator: %w", err)
+	}
+	if discriminator != "APP/INTERCHAIN_TRANSFER_SENT" {
+		return AppInterchainTransferSentEvent{}, fmt.Errorf("cannot cast Event to AppInterchainTransferSentEvent, discriminator is %s", discriminator)
+	}
 	var body AppInterchainTransferSentEvent
-	err := json.Unmarshal(t.union, &body)
+	err = json.Unmarshal(t.union, &body)
 	return body, err
 }
 
 // FromAppInterchainTransferSentEvent overwrites any union data inside the Event as the provided AppInterchainTransferSentEvent
 func (t *Event) FromAppInterchainTransferSentEvent(v AppInterchainTransferSentEvent) error {
+	var err error
+	var b []byte
 	t.Type = "APP/INTERCHAIN_TRANSFER_SENT"
 
-	b, err := json.Marshal(v)
+	b, err = json.Marshal(v)
 	t.union = b
 	return err
 }
 
 // MergeAppInterchainTransferSentEvent performs a merge with any union data inside the Event, using the provided AppInterchainTransferSentEvent
 func (t *Event) MergeAppInterchainTransferSentEvent(v AppInterchainTransferSentEvent) error {
+	var err error
+	var b []byte
+	var merged []byte
 	t.Type = "APP/INTERCHAIN_TRANSFER_SENT"
 
-	b, err := json.Marshal(v)
+	b, err = json.Marshal(v)
 	if err != nil {
 		return err
 	}
-
-	merged, err := runtime.JSONMerge(t.union, b)
+	merged, err = runtime.JSONMerge(t.union, b)
 	t.union = merged
 	return err
 }
 
 // AsAppInterchainTransferReceivedEvent returns the union data inside the Event as a AppInterchainTransferReceivedEvent
 func (t Event) AsAppInterchainTransferReceivedEvent() (AppInterchainTransferReceivedEvent, error) {
+	var err error
+	discriminator, err := t.Discriminator()
+	if err != nil {
+		return AppInterchainTransferReceivedEvent{}, fmt.Errorf("failed to get discriminator: %w", err)
+	}
+	if discriminator != "APP/INTERCHAIN_TRANSFER_RECEIVED" {
+		return AppInterchainTransferReceivedEvent{}, fmt.Errorf("cannot cast Event to AppInterchainTransferReceivedEvent, discriminator is %s", discriminator)
+	}
 	var body AppInterchainTransferReceivedEvent
-	err := json.Unmarshal(t.union, &body)
+	err = json.Unmarshal(t.union, &body)
 	return body, err
 }
 
 // FromAppInterchainTransferReceivedEvent overwrites any union data inside the Event as the provided AppInterchainTransferReceivedEvent
 func (t *Event) FromAppInterchainTransferReceivedEvent(v AppInterchainTransferReceivedEvent) error {
+	var err error
+	var b []byte
 	t.Type = "APP/INTERCHAIN_TRANSFER_RECEIVED"
 
-	b, err := json.Marshal(v)
+	b, err = json.Marshal(v)
 	t.union = b
 	return err
 }
 
 // MergeAppInterchainTransferReceivedEvent performs a merge with any union data inside the Event, using the provided AppInterchainTransferReceivedEvent
 func (t *Event) MergeAppInterchainTransferReceivedEvent(v AppInterchainTransferReceivedEvent) error {
+	var err error
+	var b []byte
+	var merged []byte
 	t.Type = "APP/INTERCHAIN_TRANSFER_RECEIVED"
 
-	b, err := json.Marshal(v)
+	b, err = json.Marshal(v)
 	if err != nil {
 		return err
 	}
-
-	merged, err := runtime.JSONMerge(t.union, b)
+	merged, err = runtime.JSONMerge(t.union, b)
 	t.union = merged
 	return err
 }
 
 func (t Event) Discriminator() (string, error) {
+	return string(t.Type), nil
+	// Fallback to unmarshaling from union if no property found
 	var discriminator struct {
 		Discriminator string `json:"type"`
 	}
@@ -1343,61 +1568,154 @@ func (t *Event) UnmarshalJSON(b []byte) error {
 
 // AsPublishEventAcceptedResult returns the union data inside the PublishEventResultItem as a PublishEventAcceptedResult
 func (t PublishEventResultItem) AsPublishEventAcceptedResult() (PublishEventAcceptedResult, error) {
+	var err error
+	discriminator, err := t.Discriminator()
+	if err != nil {
+		return PublishEventAcceptedResult{}, fmt.Errorf("failed to get discriminator: %w", err)
+	}
+	if discriminator != "ACCEPTED" {
+		return PublishEventAcceptedResult{}, fmt.Errorf("cannot cast PublishEventResultItem to PublishEventAcceptedResult, discriminator is %s", discriminator)
+	}
 	var body PublishEventAcceptedResult
-	err := json.Unmarshal(t.union, &body)
+	err = json.Unmarshal(t.union, &body)
 	return body, err
 }
 
 // FromPublishEventAcceptedResult overwrites any union data inside the PublishEventResultItem as the provided PublishEventAcceptedResult
 func (t *PublishEventResultItem) FromPublishEventAcceptedResult(v PublishEventAcceptedResult) error {
-	v.Status = "ACCEPTED"
-	b, err := json.Marshal(v)
+	var err error
+	var b []byte
+
+	// Add discriminator to the JSON data
+	vMap := make(map[string]interface{})
+	vBytes, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+	err = json.Unmarshal(vBytes, &vMap)
+	if err != nil {
+		return err
+	}
+	vMap["Status"] = "ACCEPTED"
+	b, err = json.Marshal(vMap)
+	t.union = b
+	return err
+
+	b, err = json.Marshal(v)
 	t.union = b
 	return err
 }
 
 // MergePublishEventAcceptedResult performs a merge with any union data inside the PublishEventResultItem, using the provided PublishEventAcceptedResult
 func (t *PublishEventResultItem) MergePublishEventAcceptedResult(v PublishEventAcceptedResult) error {
-	v.Status = "ACCEPTED"
-	b, err := json.Marshal(v)
+	var err error
+	var b []byte
+	var merged []byte
+
+	// Add discriminator to the JSON data
+	vMap := make(map[string]interface{})
+	vBytes, err := json.Marshal(v)
 	if err != nil {
 		return err
 	}
+	err = json.Unmarshal(vBytes, &vMap)
+	if err != nil {
+		return err
+	}
+	vMap["Status"] = "ACCEPTED"
+	b, err = json.Marshal(vMap)
+	if err != nil {
+		return err
+	}
+	merged, err = runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
 
-	merged, err := runtime.JSONMerge(t.union, b)
+	b, err = json.Marshal(v)
+	if err != nil {
+		return err
+	}
+	merged, err = runtime.JSONMerge(t.union, b)
 	t.union = merged
 	return err
 }
 
 // AsPublishEventErrorResult returns the union data inside the PublishEventResultItem as a PublishEventErrorResult
 func (t PublishEventResultItem) AsPublishEventErrorResult() (PublishEventErrorResult, error) {
+	var err error
+	discriminator, err := t.Discriminator()
+	if err != nil {
+		return PublishEventErrorResult{}, fmt.Errorf("failed to get discriminator: %w", err)
+	}
+	if discriminator != "ERROR" {
+		return PublishEventErrorResult{}, fmt.Errorf("cannot cast PublishEventResultItem to PublishEventErrorResult, discriminator is %s", discriminator)
+	}
 	var body PublishEventErrorResult
-	err := json.Unmarshal(t.union, &body)
+	err = json.Unmarshal(t.union, &body)
 	return body, err
 }
 
 // FromPublishEventErrorResult overwrites any union data inside the PublishEventResultItem as the provided PublishEventErrorResult
 func (t *PublishEventResultItem) FromPublishEventErrorResult(v PublishEventErrorResult) error {
-	v.Status = "ERROR"
-	b, err := json.Marshal(v)
+	var err error
+	var b []byte
+
+	// Add discriminator to the JSON data
+	vMap := make(map[string]interface{})
+	vBytes, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+	err = json.Unmarshal(vBytes, &vMap)
+	if err != nil {
+		return err
+	}
+	vMap["Status"] = "ERROR"
+	b, err = json.Marshal(vMap)
+	t.union = b
+	return err
+
+	b, err = json.Marshal(v)
 	t.union = b
 	return err
 }
 
 // MergePublishEventErrorResult performs a merge with any union data inside the PublishEventResultItem, using the provided PublishEventErrorResult
 func (t *PublishEventResultItem) MergePublishEventErrorResult(v PublishEventErrorResult) error {
-	v.Status = "ERROR"
-	b, err := json.Marshal(v)
+	var err error
+	var b []byte
+	var merged []byte
+
+	// Add discriminator to the JSON data
+	vMap := make(map[string]interface{})
+	vBytes, err := json.Marshal(v)
 	if err != nil {
 		return err
 	}
+	err = json.Unmarshal(vBytes, &vMap)
+	if err != nil {
+		return err
+	}
+	vMap["Status"] = "ERROR"
+	b, err = json.Marshal(vMap)
+	if err != nil {
+		return err
+	}
+	merged, err = runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
 
-	merged, err := runtime.JSONMerge(t.union, b)
+	b, err = json.Marshal(v)
+	if err != nil {
+		return err
+	}
+	merged, err = runtime.JSONMerge(t.union, b)
 	t.union = merged
 	return err
 }
 
 func (t PublishEventResultItem) Discriminator() (string, error) {
+	// Fallback to unmarshaling from union if no property found
 	var discriminator struct {
 		Discriminator string `json:"status"`
 	}
@@ -1432,270 +1750,478 @@ func (t *PublishEventResultItem) UnmarshalJSON(b []byte) error {
 
 // AsConstructProofTask returns the union data inside the Task as a ConstructProofTask
 func (t Task) AsConstructProofTask() (ConstructProofTask, error) {
+	var err error
+	discriminator, err := t.Discriminator()
+	if err != nil {
+		return ConstructProofTask{}, fmt.Errorf("failed to get discriminator: %w", err)
+	}
+	if discriminator != "CONSTRUCT_PROOF" {
+		return ConstructProofTask{}, fmt.Errorf("cannot cast Task to ConstructProofTask, discriminator is %s", discriminator)
+	}
 	var body ConstructProofTask
-	err := json.Unmarshal(t.union, &body)
+	err = json.Unmarshal(t.union, &body)
 	return body, err
 }
 
 // FromConstructProofTask overwrites any union data inside the Task as the provided ConstructProofTask
 func (t *Task) FromConstructProofTask(v ConstructProofTask) error {
-	b, err := json.Marshal(v)
+	var err error
+	var b []byte
+	t.Type = "CONSTRUCT_PROOF"
+
+	b, err = json.Marshal(v)
 	t.union = b
 	return err
 }
 
 // MergeConstructProofTask performs a merge with any union data inside the Task, using the provided ConstructProofTask
 func (t *Task) MergeConstructProofTask(v ConstructProofTask) error {
-	b, err := json.Marshal(v)
+	var err error
+	var b []byte
+	var merged []byte
+	t.Type = "CONSTRUCT_PROOF"
+
+	b, err = json.Marshal(v)
 	if err != nil {
 		return err
 	}
-
-	merged, err := runtime.JSONMerge(t.union, b)
+	merged, err = runtime.JSONMerge(t.union, b)
 	t.union = merged
 	return err
 }
 
 // AsExecuteTask returns the union data inside the Task as a ExecuteTask
 func (t Task) AsExecuteTask() (ExecuteTask, error) {
+	var err error
+	discriminator, err := t.Discriminator()
+	if err != nil {
+		return ExecuteTask{}, fmt.Errorf("failed to get discriminator: %w", err)
+	}
+	if discriminator != "EXECUTE" {
+		return ExecuteTask{}, fmt.Errorf("cannot cast Task to ExecuteTask, discriminator is %s", discriminator)
+	}
 	var body ExecuteTask
-	err := json.Unmarshal(t.union, &body)
+	err = json.Unmarshal(t.union, &body)
 	return body, err
 }
 
 // FromExecuteTask overwrites any union data inside the Task as the provided ExecuteTask
 func (t *Task) FromExecuteTask(v ExecuteTask) error {
-	b, err := json.Marshal(v)
+	var err error
+	var b []byte
+	t.Type = "EXECUTE"
+
+	b, err = json.Marshal(v)
 	t.union = b
 	return err
 }
 
 // MergeExecuteTask performs a merge with any union data inside the Task, using the provided ExecuteTask
 func (t *Task) MergeExecuteTask(v ExecuteTask) error {
-	b, err := json.Marshal(v)
+	var err error
+	var b []byte
+	var merged []byte
+	t.Type = "EXECUTE"
+
+	b, err = json.Marshal(v)
 	if err != nil {
 		return err
 	}
-
-	merged, err := runtime.JSONMerge(t.union, b)
+	merged, err = runtime.JSONMerge(t.union, b)
 	t.union = merged
 	return err
 }
 
 // AsGatewayTransactionTask returns the union data inside the Task as a GatewayTransactionTask
 func (t Task) AsGatewayTransactionTask() (GatewayTransactionTask, error) {
+	var err error
+	discriminator, err := t.Discriminator()
+	if err != nil {
+		return GatewayTransactionTask{}, fmt.Errorf("failed to get discriminator: %w", err)
+	}
+	if discriminator != "GATEWAY_TX" {
+		return GatewayTransactionTask{}, fmt.Errorf("cannot cast Task to GatewayTransactionTask, discriminator is %s", discriminator)
+	}
 	var body GatewayTransactionTask
-	err := json.Unmarshal(t.union, &body)
+	err = json.Unmarshal(t.union, &body)
 	return body, err
 }
 
 // FromGatewayTransactionTask overwrites any union data inside the Task as the provided GatewayTransactionTask
 func (t *Task) FromGatewayTransactionTask(v GatewayTransactionTask) error {
-	b, err := json.Marshal(v)
+	var err error
+	var b []byte
+	t.Type = "GATEWAY_TX"
+
+	b, err = json.Marshal(v)
 	t.union = b
 	return err
 }
 
 // MergeGatewayTransactionTask performs a merge with any union data inside the Task, using the provided GatewayTransactionTask
 func (t *Task) MergeGatewayTransactionTask(v GatewayTransactionTask) error {
-	b, err := json.Marshal(v)
+	var err error
+	var b []byte
+	var merged []byte
+	t.Type = "GATEWAY_TX"
+
+	b, err = json.Marshal(v)
 	if err != nil {
 		return err
 	}
-
-	merged, err := runtime.JSONMerge(t.union, b)
+	merged, err = runtime.JSONMerge(t.union, b)
 	t.union = merged
 	return err
 }
 
 // AsReactToWasmEventTask returns the union data inside the Task as a ReactToWasmEventTask
 func (t Task) AsReactToWasmEventTask() (ReactToWasmEventTask, error) {
+	var err error
+	discriminator, err := t.Discriminator()
+	if err != nil {
+		return ReactToWasmEventTask{}, fmt.Errorf("failed to get discriminator: %w", err)
+	}
+	if discriminator != "REACT_TO_WASM_EVENT" {
+		return ReactToWasmEventTask{}, fmt.Errorf("cannot cast Task to ReactToWasmEventTask, discriminator is %s", discriminator)
+	}
 	var body ReactToWasmEventTask
-	err := json.Unmarshal(t.union, &body)
+	err = json.Unmarshal(t.union, &body)
 	return body, err
 }
 
 // FromReactToWasmEventTask overwrites any union data inside the Task as the provided ReactToWasmEventTask
 func (t *Task) FromReactToWasmEventTask(v ReactToWasmEventTask) error {
-	b, err := json.Marshal(v)
+	var err error
+	var b []byte
+	t.Type = "REACT_TO_WASM_EVENT"
+
+	b, err = json.Marshal(v)
 	t.union = b
 	return err
 }
 
 // MergeReactToWasmEventTask performs a merge with any union data inside the Task, using the provided ReactToWasmEventTask
 func (t *Task) MergeReactToWasmEventTask(v ReactToWasmEventTask) error {
-	b, err := json.Marshal(v)
+	var err error
+	var b []byte
+	var merged []byte
+	t.Type = "REACT_TO_WASM_EVENT"
+
+	b, err = json.Marshal(v)
 	if err != nil {
 		return err
 	}
-
-	merged, err := runtime.JSONMerge(t.union, b)
+	merged, err = runtime.JSONMerge(t.union, b)
 	t.union = merged
 	return err
 }
 
 // AsRefundTask returns the union data inside the Task as a RefundTask
 func (t Task) AsRefundTask() (RefundTask, error) {
+	var err error
+	discriminator, err := t.Discriminator()
+	if err != nil {
+		return RefundTask{}, fmt.Errorf("failed to get discriminator: %w", err)
+	}
+	if discriminator != "REFUND" {
+		return RefundTask{}, fmt.Errorf("cannot cast Task to RefundTask, discriminator is %s", discriminator)
+	}
 	var body RefundTask
-	err := json.Unmarshal(t.union, &body)
+	err = json.Unmarshal(t.union, &body)
 	return body, err
 }
 
 // FromRefundTask overwrites any union data inside the Task as the provided RefundTask
 func (t *Task) FromRefundTask(v RefundTask) error {
-	b, err := json.Marshal(v)
+	var err error
+	var b []byte
+	t.Type = "REFUND"
+
+	b, err = json.Marshal(v)
 	t.union = b
 	return err
 }
 
 // MergeRefundTask performs a merge with any union data inside the Task, using the provided RefundTask
 func (t *Task) MergeRefundTask(v RefundTask) error {
-	b, err := json.Marshal(v)
+	var err error
+	var b []byte
+	var merged []byte
+	t.Type = "REFUND"
+
+	b, err = json.Marshal(v)
 	if err != nil {
 		return err
 	}
-
-	merged, err := runtime.JSONMerge(t.union, b)
+	merged, err = runtime.JSONMerge(t.union, b)
 	t.union = merged
 	return err
 }
 
 // AsReactToExpiredSigningSessionTask returns the union data inside the Task as a ReactToExpiredSigningSessionTask
 func (t Task) AsReactToExpiredSigningSessionTask() (ReactToExpiredSigningSessionTask, error) {
+	var err error
+	discriminator, err := t.Discriminator()
+	if err != nil {
+		return ReactToExpiredSigningSessionTask{}, fmt.Errorf("failed to get discriminator: %w", err)
+	}
+	if discriminator != "REACT_TO_EXPIRED_SIGNING_SESSION" {
+		return ReactToExpiredSigningSessionTask{}, fmt.Errorf("cannot cast Task to ReactToExpiredSigningSessionTask, discriminator is %s", discriminator)
+	}
 	var body ReactToExpiredSigningSessionTask
-	err := json.Unmarshal(t.union, &body)
+	err = json.Unmarshal(t.union, &body)
 	return body, err
 }
 
 // FromReactToExpiredSigningSessionTask overwrites any union data inside the Task as the provided ReactToExpiredSigningSessionTask
 func (t *Task) FromReactToExpiredSigningSessionTask(v ReactToExpiredSigningSessionTask) error {
-	b, err := json.Marshal(v)
+	var err error
+	var b []byte
+	t.Type = "REACT_TO_EXPIRED_SIGNING_SESSION"
+
+	b, err = json.Marshal(v)
 	t.union = b
 	return err
 }
 
 // MergeReactToExpiredSigningSessionTask performs a merge with any union data inside the Task, using the provided ReactToExpiredSigningSessionTask
 func (t *Task) MergeReactToExpiredSigningSessionTask(v ReactToExpiredSigningSessionTask) error {
-	b, err := json.Marshal(v)
+	var err error
+	var b []byte
+	var merged []byte
+	t.Type = "REACT_TO_EXPIRED_SIGNING_SESSION"
+
+	b, err = json.Marshal(v)
 	if err != nil {
 		return err
 	}
-
-	merged, err := runtime.JSONMerge(t.union, b)
+	merged, err = runtime.JSONMerge(t.union, b)
 	t.union = merged
 	return err
 }
 
 // AsReactToRetriablePollTask returns the union data inside the Task as a ReactToRetriablePollTask
 func (t Task) AsReactToRetriablePollTask() (ReactToRetriablePollTask, error) {
+	var err error
+	discriminator, err := t.Discriminator()
+	if err != nil {
+		return ReactToRetriablePollTask{}, fmt.Errorf("failed to get discriminator: %w", err)
+	}
+	if discriminator != "REACT_TO_RETRIABLE_POLL" {
+		return ReactToRetriablePollTask{}, fmt.Errorf("cannot cast Task to ReactToRetriablePollTask, discriminator is %s", discriminator)
+	}
 	var body ReactToRetriablePollTask
-	err := json.Unmarshal(t.union, &body)
+	err = json.Unmarshal(t.union, &body)
 	return body, err
 }
 
 // FromReactToRetriablePollTask overwrites any union data inside the Task as the provided ReactToRetriablePollTask
 func (t *Task) FromReactToRetriablePollTask(v ReactToRetriablePollTask) error {
-	b, err := json.Marshal(v)
+	var err error
+	var b []byte
+	t.Type = "REACT_TO_RETRIABLE_POLL"
+
+	b, err = json.Marshal(v)
 	t.union = b
 	return err
 }
 
 // MergeReactToRetriablePollTask performs a merge with any union data inside the Task, using the provided ReactToRetriablePollTask
 func (t *Task) MergeReactToRetriablePollTask(v ReactToRetriablePollTask) error {
-	b, err := json.Marshal(v)
+	var err error
+	var b []byte
+	var merged []byte
+	t.Type = "REACT_TO_RETRIABLE_POLL"
+
+	b, err = json.Marshal(v)
 	if err != nil {
 		return err
 	}
-
-	merged, err := runtime.JSONMerge(t.union, b)
+	merged, err = runtime.JSONMerge(t.union, b)
 	t.union = merged
 	return err
 }
 
 // AsVerifyTask returns the union data inside the Task as a VerifyTask
 func (t Task) AsVerifyTask() (VerifyTask, error) {
+	var err error
+	discriminator, err := t.Discriminator()
+	if err != nil {
+		return VerifyTask{}, fmt.Errorf("failed to get discriminator: %w", err)
+	}
+	if discriminator != "VERIFY" {
+		return VerifyTask{}, fmt.Errorf("cannot cast Task to VerifyTask, discriminator is %s", discriminator)
+	}
 	var body VerifyTask
-	err := json.Unmarshal(t.union, &body)
+	err = json.Unmarshal(t.union, &body)
 	return body, err
 }
 
 // FromVerifyTask overwrites any union data inside the Task as the provided VerifyTask
 func (t *Task) FromVerifyTask(v VerifyTask) error {
-	b, err := json.Marshal(v)
+	var err error
+	var b []byte
+	t.Type = "VERIFY"
+
+	b, err = json.Marshal(v)
 	t.union = b
 	return err
 }
 
 // MergeVerifyTask performs a merge with any union data inside the Task, using the provided VerifyTask
 func (t *Task) MergeVerifyTask(v VerifyTask) error {
-	b, err := json.Marshal(v)
+	var err error
+	var b []byte
+	var merged []byte
+	t.Type = "VERIFY"
+
+	b, err = json.Marshal(v)
 	if err != nil {
 		return err
 	}
-
-	merged, err := runtime.JSONMerge(t.union, b)
+	merged, err = runtime.JSONMerge(t.union, b)
 	t.union = merged
 	return err
 }
 
+func (t Task) Discriminator() (string, error) {
+	return string(t.Type), nil
+	// Fallback to unmarshaling from union if no property found
+	var discriminator struct {
+		Discriminator string `json:"type"`
+	}
+	err := json.Unmarshal(t.union, &discriminator)
+	return discriminator.Discriminator, err
+}
+
+func (t Task) ValueByDiscriminator() (interface{}, error) {
+	discriminator, err := t.Discriminator()
+	if err != nil {
+		return nil, err
+	}
+	switch discriminator {
+	case "CONSTRUCT_PROOF":
+		return t.AsConstructProofTask()
+	case "EXECUTE":
+		return t.AsExecuteTask()
+	case "GATEWAY_TX":
+		return t.AsGatewayTransactionTask()
+	case "REACT_TO_EXPIRED_SIGNING_SESSION":
+		return t.AsReactToExpiredSigningSessionTask()
+	case "REACT_TO_RETRIABLE_POLL":
+		return t.AsReactToRetriablePollTask()
+	case "REACT_TO_WASM_EVENT":
+		return t.AsReactToWasmEventTask()
+	case "REFUND":
+		return t.AsRefundTask()
+	case "VERIFY":
+		return t.AsVerifyTask()
+	default:
+		return nil, errors.New("unknown discriminator value: " + discriminator)
+	}
+}
+
 func (t Task) MarshalJSON() ([]byte, error) {
 	b, err := t.union.MarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	object := make(map[string]json.RawMessage)
+	if t.union != nil {
+		err = json.Unmarshal(b, &object)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	object["type"], err = json.Marshal(t.Type)
+	if err != nil {
+		return nil, fmt.Errorf("error marshaling 'type': %w", err)
+	}
+
+	b, err = json.Marshal(object)
 	return b, err
 }
 
 func (t *Task) UnmarshalJSON(b []byte) error {
 	err := t.union.UnmarshalJSON(b)
+	if err != nil {
+		return err
+	}
+	object := make(map[string]json.RawMessage)
+	err = json.Unmarshal(b, &object)
+	if err != nil {
+		return err
+	}
+
+	if raw, found := object["type"]; found {
+		err = json.Unmarshal(raw, &t.Type)
+		if err != nil {
+			return fmt.Errorf("error reading 'type': %w", err)
+		}
+	}
+
 	return err
 }
 
 // AsWasmRequestWithObjectBody returns the union data inside the WasmRequest as a WasmRequestWithObjectBody
 func (t WasmRequest) AsWasmRequestWithObjectBody() (WasmRequestWithObjectBody, error) {
+	var err error
 	var body WasmRequestWithObjectBody
-	err := json.Unmarshal(t.union, &body)
+	err = json.Unmarshal(t.union, &body)
 	return body, err
 }
 
 // FromWasmRequestWithObjectBody overwrites any union data inside the WasmRequest as the provided WasmRequestWithObjectBody
 func (t *WasmRequest) FromWasmRequestWithObjectBody(v WasmRequestWithObjectBody) error {
-	b, err := json.Marshal(v)
+	var err error
+	var b []byte
+	b, err = json.Marshal(v)
 	t.union = b
 	return err
 }
 
 // MergeWasmRequestWithObjectBody performs a merge with any union data inside the WasmRequest, using the provided WasmRequestWithObjectBody
 func (t *WasmRequest) MergeWasmRequestWithObjectBody(v WasmRequestWithObjectBody) error {
-	b, err := json.Marshal(v)
+	var err error
+	var b []byte
+	var merged []byte
+	b, err = json.Marshal(v)
 	if err != nil {
 		return err
 	}
-
-	merged, err := runtime.JSONMerge(t.union, b)
+	merged, err = runtime.JSONMerge(t.union, b)
 	t.union = merged
 	return err
 }
 
 // AsWasmRequestWithStringBody returns the union data inside the WasmRequest as a WasmRequestWithStringBody
 func (t WasmRequest) AsWasmRequestWithStringBody() (WasmRequestWithStringBody, error) {
+	var err error
 	var body WasmRequestWithStringBody
-	err := json.Unmarshal(t.union, &body)
+	err = json.Unmarshal(t.union, &body)
 	return body, err
 }
 
 // FromWasmRequestWithStringBody overwrites any union data inside the WasmRequest as the provided WasmRequestWithStringBody
 func (t *WasmRequest) FromWasmRequestWithStringBody(v WasmRequestWithStringBody) error {
-	b, err := json.Marshal(v)
+	var err error
+	var b []byte
+	b, err = json.Marshal(v)
 	t.union = b
 	return err
 }
 
 // MergeWasmRequestWithStringBody performs a merge with any union data inside the WasmRequest, using the provided WasmRequestWithStringBody
 func (t *WasmRequest) MergeWasmRequestWithStringBody(v WasmRequestWithStringBody) error {
-	b, err := json.Marshal(v)
+	var err error
+	var b []byte
+	var merged []byte
+	b, err = json.Marshal(v)
 	if err != nil {
 		return err
 	}
-
-	merged, err := runtime.JSONMerge(t.union, b)
+	merged, err = runtime.JSONMerge(t.union, b)
 	t.union = merged
 	return err
 }

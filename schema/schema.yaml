@@ -1190,8 +1190,26 @@ components:
         - $ref: '#/components/schemas/ReactToExpiredSigningSessionTask'
         - $ref: '#/components/schemas/ReactToRetriablePollTask'
         - $ref: '#/components/schemas/VerifyTask'
+      discriminator:
+        propertyName: type
+        mapping:
+          CONSTRUCT_PROOF: '#/components/schemas/ConstructProofTask'
+          EXECUTE: '#/components/schemas/ExecuteTask'
+          GATEWAY_TX: '#/components/schemas/GatewayTransactionTask'
+          REACT_TO_WASM_EVENT: '#/components/schemas/ReactToWasmEventTask'
+          REFUND: '#/components/schemas/RefundTask'
+          REACT_TO_EXPIRED_SIGNING_SESSION: '#/components/schemas/ReactToExpiredSigningSessionTask'
+          REACT_TO_RETRIABLE_POLL: '#/components/schemas/ReactToRetriablePollTask'
+          VERIFY: '#/components/schemas/VerifyTask'
+      properties:
+        type:
+          $ref: '#/components/schemas/TaskType'
+      required:
+        - type
     ConstructProofTask:
       properties:
+        type:
+          $ref: '#/components/schemas/TaskType'
         message:
           $ref: "#/components/schemas/Message"
         payload:
@@ -1199,10 +1217,13 @@ components:
           format: byte
           minLength: 1
       required:
+        - type
         - message
         - payload
     ExecuteTask:
       properties:
+        type:
+          $ref: '#/components/schemas/TaskType'
         message:
           $ref: "#/components/schemas/Message"
         payload:
@@ -1212,19 +1233,25 @@ components:
         availableGasBalance:
           $ref: "#/components/schemas/Token"
       required:
+        - type
         - message
         - payload
         - availableGasBalance
     GatewayTransactionTask:
       properties:
+        type:
+          $ref: '#/components/schemas/TaskType'
         executeData:
           type: string
           format: byte
           minLength: 1
       required:
+        - type
         - executeData
     ReactToWasmEventTask:
       properties:
+        type:
+          $ref: '#/components/schemas/TaskType'
         height:
           type: integer
           format: int64
@@ -1232,10 +1259,13 @@ components:
         event:
           $ref: '#/components/schemas/WasmEvent'
       required:
+        - type
         - height
         - event
     RefundTask:
       properties:
+        type:
+          $ref: '#/components/schemas/TaskType'
         message:
           $ref: "#/components/schemas/Message"
         refundRecipientAddress:
@@ -1243,11 +1273,14 @@ components:
         remainingGasBalance:
           $ref: "#/components/schemas/Token"
       required:
+        - type
         - message
         - refundRecipientAddress
         - remainingGasBalance
     ReactToExpiredSigningSessionTask:
       properties:
+        type:
+          $ref: '#/components/schemas/TaskType'
         sessionID:
           type: integer
           format: uint64
@@ -1258,12 +1291,15 @@ components:
         requestPayload:
           $ref: '#/components/schemas/WasmRequest'
       required:
+        - type
         - sessionID
         - broadcastID
         - invokedContractAddress
         - requestPayload
     ReactToRetriablePollTask:
       properties:
+        type:
+          $ref: '#/components/schemas/TaskType'
         pollID:
           type: integer
           format: uint64
@@ -1278,6 +1314,7 @@ components:
           items:
             $ref: '#/components/schemas/QuorumReachedEvent'
       required:
+        - type
         - pollID
         - broadcastID
         - invokedContractAddress
@@ -1285,6 +1322,8 @@ components:
         - quorumReachedEvents
     VerifyTask:
       properties:
+        type:
+          $ref: '#/components/schemas/TaskType'
         message:
           $ref: "#/components/schemas/Message"
         destinationChain:
@@ -1295,6 +1334,7 @@ components:
           format: byte
           minLength: 1
       required:
+        - type
         - message
         - destinationChain
         - payload
