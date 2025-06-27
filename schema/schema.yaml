@@ -1128,10 +1128,6 @@ components:
         - TaskTypeVerify
         - TaskTypeReactToExpiredSigningSession
         - TaskTypeReactToRetriablePoll
-    TaskMetadata:
-      allOf:
-        - $ref: '#/components/schemas/DestinationChainTaskMetadata'
-        - $ref: '#/components/schemas/SourceChainTaskMetadata'
     DestinationChainTaskMetadata:
       description: |
         Metadata attached to GATEWAY_TX and REACT_TO_EXPIRED_SIGNING_SESSION tasks. 
@@ -1150,6 +1146,32 @@ components:
         sourceContext:
           $ref: '#/components/schemas/MessageContext'
     TaskItem:
+      oneOf:
+        - $ref: '#/components/schemas/ConstructProofTaskItem'
+        - $ref: '#/components/schemas/ExecuteTaskItem'
+        - $ref: '#/components/schemas/GatewayTransactionTaskItem'
+        - $ref: '#/components/schemas/ReactToWasmEventTaskItem'
+        - $ref: '#/components/schemas/RefundTaskItem'
+        - $ref: '#/components/schemas/ReactToExpiredSigningSessionTaskItem'
+        - $ref: '#/components/schemas/ReactToRetriablePollTaskItem'
+        - $ref: '#/components/schemas/VerifyTaskItem'
+      discriminator:
+        propertyName: type
+        mapping:
+          CONSTRUCT_PROOF: '#/components/schemas/ConstructProofTaskItem'
+          EXECUTE: '#/components/schemas/ExecuteTaskItem'
+          GATEWAY_TX: '#/components/schemas/GatewayTransactionTaskItem'
+          REACT_TO_WASM_EVENT: '#/components/schemas/ReactToWasmEventTaskItem'
+          REFUND: '#/components/schemas/RefundTaskItem'
+          REACT_TO_EXPIRED_SIGNING_SESSION: '#/components/schemas/ReactToExpiredSigningSessionTaskItem'
+          REACT_TO_RETRIABLE_POLL: '#/components/schemas/ReactToRetriablePollTaskItem'
+          VERIFY: '#/components/schemas/VerifyTaskItem'
+      properties:
+        type:
+          $ref: '#/components/schemas/TaskType'
+      required:
+        - type
+    TaskEnvelope:
       properties:
         id:
           allOf:
@@ -1163,10 +1185,6 @@ components:
           format: date-time
         type:
           $ref: '#/components/schemas/TaskType'
-        meta:
-          $ref: '#/components/schemas/TaskMetadata'
-        task:
-          $ref: '#/components/schemas/Task'
       required:
         - id
         - chain
@@ -1180,32 +1198,78 @@ components:
       x-go-type-import:
         path: github.com/google/uuid
         name: uuid
-    Task:
-      oneOf:
-        - $ref: '#/components/schemas/ConstructProofTask'
-        - $ref: '#/components/schemas/ExecuteTask'
-        - $ref: '#/components/schemas/GatewayTransactionTask'
-        - $ref: '#/components/schemas/ReactToWasmEventTask'
-        - $ref: '#/components/schemas/RefundTask'
-        - $ref: '#/components/schemas/ReactToExpiredSigningSessionTask'
-        - $ref: '#/components/schemas/ReactToRetriablePollTask'
-        - $ref: '#/components/schemas/VerifyTask'
-      discriminator:
-        propertyName: type
-        mapping:
-          CONSTRUCT_PROOF: '#/components/schemas/ConstructProofTask'
-          EXECUTE: '#/components/schemas/ExecuteTask'
-          GATEWAY_TX: '#/components/schemas/GatewayTransactionTask'
-          REACT_TO_WASM_EVENT: '#/components/schemas/ReactToWasmEventTask'
-          REFUND: '#/components/schemas/RefundTask'
-          REACT_TO_EXPIRED_SIGNING_SESSION: '#/components/schemas/ReactToExpiredSigningSessionTask'
-          REACT_TO_RETRIABLE_POLL: '#/components/schemas/ReactToRetriablePollTask'
-          VERIFY: '#/components/schemas/VerifyTask'
-      properties:
-        type:
-          $ref: '#/components/schemas/TaskType'
-      required:
-        - type
+    ConstructProofTaskItem:
+      allOf:
+        - $ref: '#/components/schemas/TaskEnvelope'
+        - properties:
+            task:
+              $ref: '#/components/schemas/ConstructProofTask'
+          required:
+            - task
+    ExecuteTaskItem:
+      allOf:
+        - $ref: '#/components/schemas/TaskEnvelope'
+        - properties:
+            task:
+              $ref: '#/components/schemas/ExecuteTask'
+          required:
+            - task
+    GatewayTransactionTaskItem:
+      allOf:
+        - $ref: '#/components/schemas/TaskEnvelope'
+        - properties:
+            task:
+              $ref: '#/components/schemas/GatewayTransactionTask'
+            meta:
+              $ref: '#/components/schemas/DestinationChainTaskMetadata'
+          required:
+            - task
+    ReactToWasmEventTaskItem:
+      allOf:
+        - $ref: '#/components/schemas/TaskEnvelope'
+        - properties:
+            task:
+              $ref: '#/components/schemas/ReactToWasmEventTask'
+          required:
+            - task
+    RefundTaskItem:
+      allOf:
+        - $ref: '#/components/schemas/TaskEnvelope'
+        - properties:
+            task:
+              $ref: '#/components/schemas/RefundTask'
+            meta:
+              $ref: '#/components/schemas/SourceChainTaskMetadata'
+          required:
+            - task
+    ReactToExpiredSigningSessionTaskItem:
+      allOf:
+        - $ref: '#/components/schemas/TaskEnvelope'
+        - properties:
+            task:
+              $ref: '#/components/schemas/ReactToExpiredSigningSessionTask'
+            meta:
+              $ref: '#/components/schemas/DestinationChainTaskMetadata'
+          required:
+            - task
+    ReactToRetriablePollTaskItem:
+      allOf:
+        - $ref: '#/components/schemas/TaskEnvelope'
+        - properties:
+            task:
+              $ref: '#/components/schemas/ReactToRetriablePollTask'
+          required:
+            - task
+    VerifyTaskItem:
+      allOf:
+        - $ref: '#/components/schemas/TaskEnvelope'
+        - properties:
+            task:
+              $ref: '#/components/schemas/VerifyTask'
+            meta:
+              $ref: '#/components/schemas/SourceChainTaskMetadata'
+          required:
+            - task
     ConstructProofTask:
       properties:
         type:

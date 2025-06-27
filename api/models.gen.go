@@ -255,6 +255,15 @@ type ConstructProofTask struct {
 	Type    TaskType `json:"type"`
 }
 
+// ConstructProofTaskItem defines model for ConstructProofTaskItem.
+type ConstructProofTaskItem struct {
+	Chain     string             `json:"chain"`
+	ID        TaskItemID         `json:"id"`
+	Task      ConstructProofTask `json:"task"`
+	Timestamp time.Time          `json:"timestamp"`
+	Type      TaskType           `json:"type"`
+}
+
 // ContractQueryResponse defines model for ContractQueryResponse.
 type ContractQueryResponse map[string]interface{}
 
@@ -312,6 +321,15 @@ type ExecuteTask struct {
 	Type                TaskType `json:"type"`
 }
 
+// ExecuteTaskItem defines model for ExecuteTaskItem.
+type ExecuteTaskItem struct {
+	Chain     string      `json:"chain"`
+	ID        TaskItemID  `json:"id"`
+	Task      ExecuteTask `json:"task"`
+	Timestamp time.Time   `json:"timestamp"`
+	Type      TaskType    `json:"type"`
+}
+
 // Fee defines model for Fee.
 type Fee struct {
 	Description *string      `json:"description,omitempty"`
@@ -351,6 +369,19 @@ type GasRefundedEvent struct {
 type GatewayTransactionTask struct {
 	ExecuteData []byte   `json:"executeData"`
 	Type        TaskType `json:"type"`
+}
+
+// GatewayTransactionTaskItem defines model for GatewayTransactionTaskItem.
+type GatewayTransactionTaskItem struct {
+	Chain string     `json:"chain"`
+	ID    TaskItemID `json:"id"`
+
+	// Meta Metadata attached to GATEWAY_TX and REACT_TO_EXPIRED_SIGNING_SESSION tasks.
+	// The property `scopedMessages` can be omitted if the task isn't associated with any message (e.g. when executing `rotateSigners` https://github.com/axelarnetwork/axelar-gmp-sdk-solidity/blob/432449d7b330ec6edf5a8e0746644a253486ca87/contracts/gateway/AxelarAmplifierGateway.sol#L103C14-L103C27).
+	Meta      *DestinationChainTaskMetadata `json:"meta,omitempty"`
+	Task      GatewayTransactionTask        `json:"task"`
+	Timestamp time.Time                     `json:"timestamp"`
+	Type      TaskType                      `json:"type"`
 }
 
 // GetTasksResult defines model for GetTasksResult.
@@ -532,6 +563,19 @@ type ReactToExpiredSigningSessionTask struct {
 	Type                   TaskType    `json:"type"`
 }
 
+// ReactToExpiredSigningSessionTaskItem defines model for ReactToExpiredSigningSessionTaskItem.
+type ReactToExpiredSigningSessionTaskItem struct {
+	Chain string     `json:"chain"`
+	ID    TaskItemID `json:"id"`
+
+	// Meta Metadata attached to GATEWAY_TX and REACT_TO_EXPIRED_SIGNING_SESSION tasks.
+	// The property `scopedMessages` can be omitted if the task isn't associated with any message (e.g. when executing `rotateSigners` https://github.com/axelarnetwork/axelar-gmp-sdk-solidity/blob/432449d7b330ec6edf5a8e0746644a253486ca87/contracts/gateway/AxelarAmplifierGateway.sol#L103C14-L103C27).
+	Meta      *DestinationChainTaskMetadata    `json:"meta,omitempty"`
+	Task      ReactToExpiredSigningSessionTask `json:"task"`
+	Timestamp time.Time                        `json:"timestamp"`
+	Type      TaskType                         `json:"type"`
+}
+
 // ReactToRetriablePollTask defines model for ReactToRetriablePollTask.
 type ReactToRetriablePollTask struct {
 	BroadcastID            BroadcastID          `json:"broadcastID"`
@@ -542,11 +586,29 @@ type ReactToRetriablePollTask struct {
 	Type                   TaskType             `json:"type"`
 }
 
+// ReactToRetriablePollTaskItem defines model for ReactToRetriablePollTaskItem.
+type ReactToRetriablePollTaskItem struct {
+	Chain     string                   `json:"chain"`
+	ID        TaskItemID               `json:"id"`
+	Task      ReactToRetriablePollTask `json:"task"`
+	Timestamp time.Time                `json:"timestamp"`
+	Type      TaskType                 `json:"type"`
+}
+
 // ReactToWasmEventTask defines model for ReactToWasmEventTask.
 type ReactToWasmEventTask struct {
 	Event  WasmEvent `json:"event"`
 	Height int64     `json:"height"`
 	Type   TaskType  `json:"type"`
+}
+
+// ReactToWasmEventTaskItem defines model for ReactToWasmEventTaskItem.
+type ReactToWasmEventTaskItem struct {
+	Chain     string               `json:"chain"`
+	ID        TaskItemID           `json:"id"`
+	Task      ReactToWasmEventTask `json:"task"`
+	Timestamp time.Time            `json:"timestamp"`
+	Type      TaskType             `json:"type"`
 }
 
 // RefundTask defines model for RefundTask.
@@ -555,6 +617,18 @@ type RefundTask struct {
 	RefundRecipientAddress Address  `json:"refundRecipientAddress"`
 	RemainingGasBalance    Token    `json:"remainingGasBalance"`
 	Type                   TaskType `json:"type"`
+}
+
+// RefundTaskItem defines model for RefundTaskItem.
+type RefundTaskItem struct {
+	Chain string     `json:"chain"`
+	ID    TaskItemID `json:"id"`
+
+	// Meta Metadata attached to REFUND and VERIFY tasks. It carries values passed in the associated CALL event (if any) back to the source chain.
+	Meta      *SourceChainTaskMetadata `json:"meta,omitempty"`
+	Task      RefundTask               `json:"task"`
+	Timestamp time.Time                `json:"timestamp"`
+	Type      TaskType                 `json:"type"`
 }
 
 // SignersRotatedEvent defines model for SignersRotatedEvent.
@@ -584,30 +658,22 @@ type StorePayloadResult struct {
 	Keccak256 Keccak256Hash `json:"keccak256"`
 }
 
-// Task defines model for Task.
-type Task struct {
-	Type  TaskType `json:"type"`
-	union json.RawMessage
+// TaskEnvelope defines model for TaskEnvelope.
+type TaskEnvelope struct {
+	Chain     string     `json:"chain"`
+	ID        TaskItemID `json:"id"`
+	Timestamp time.Time  `json:"timestamp"`
+	Type      TaskType   `json:"type"`
 }
 
 // TaskItem defines model for TaskItem.
 type TaskItem struct {
-	Chain     string        `json:"chain"`
-	ID        TaskItemID    `json:"id"`
-	Meta      *TaskMetadata `json:"meta,omitempty"`
-	Task      Task          `json:"task"`
-	Timestamp time.Time     `json:"timestamp"`
-	Type      TaskType      `json:"type"`
+	Type  TaskType `json:"type"`
+	union json.RawMessage
 }
 
 // TaskItemID defines model for TaskItemID.
 type TaskItemID = uuid.UUID
-
-// TaskMetadata defines model for TaskMetadata.
-type TaskMetadata struct {
-	ScopedMessages *[]CrossChainID `json:"scopedMessages,omitempty"`
-	SourceContext  *MessageContext `json:"sourceContext,omitempty"`
-}
 
 // TaskType defines model for TaskType.
 type TaskType string
@@ -630,6 +696,18 @@ type VerifyTask struct {
 	Message          Message  `json:"message"`
 	Payload          []byte   `json:"payload"`
 	Type             TaskType `json:"type"`
+}
+
+// VerifyTaskItem defines model for VerifyTaskItem.
+type VerifyTaskItem struct {
+	Chain string     `json:"chain"`
+	ID    TaskItemID `json:"id"`
+
+	// Meta Metadata attached to REFUND and VERIFY tasks. It carries values passed in the associated CALL event (if any) back to the source chain.
+	Meta      *SourceChainTaskMetadata `json:"meta,omitempty"`
+	Task      VerifyTask               `json:"task"`
+	Timestamp time.Time                `json:"timestamp"`
+	Type      TaskType                 `json:"type"`
 }
 
 // WasmEvent defines model for WasmEvent.
@@ -684,8 +762,11 @@ type QueryContractStateJSONRequestBody = WasmRequest
 
 // AsToken returns the union data inside the Cost as a Token
 func (t Cost) AsToken() (Token, error) {
-	var err error
-	var body Token
+	var (
+		body Token
+		err  error
+	)
+
 	err = json.Unmarshal(t.union, &body)
 	return body, err
 }
@@ -715,8 +796,11 @@ func (t *Cost) MergeToken(v Token) error {
 
 // AsFees returns the union data inside the Cost as a Fees
 func (t Cost) AsFees() (Fees, error) {
-	var err error
-	var body Fees
+	var (
+		body Fees
+		err  error
+	)
+
 	err = json.Unmarshal(t.union, &body)
 	return body, err
 }
@@ -756,15 +840,15 @@ func (t *Cost) UnmarshalJSON(b []byte) error {
 
 // AsGasCreditEvent returns the union data inside the Event as a GasCreditEvent
 func (t Event) AsGasCreditEvent() (GasCreditEvent, error) {
-	var err error
-	discriminator, err := t.Discriminator()
-	if err != nil {
-		return GasCreditEvent{}, fmt.Errorf("failed to get discriminator: %w", err)
-	}
+	var (
+		body GasCreditEvent
+		err  error
+	)
+
+	discriminator := t.Type
 	if discriminator != "GAS_CREDIT" {
 		return GasCreditEvent{}, fmt.Errorf("cannot cast Event to GasCreditEvent, discriminator is %s", discriminator)
 	}
-	var body GasCreditEvent
 	err = json.Unmarshal(t.union, &body)
 	return body, err
 }
@@ -798,15 +882,15 @@ func (t *Event) MergeGasCreditEvent(v GasCreditEvent) error {
 
 // AsGasRefundedEvent returns the union data inside the Event as a GasRefundedEvent
 func (t Event) AsGasRefundedEvent() (GasRefundedEvent, error) {
-	var err error
-	discriminator, err := t.Discriminator()
-	if err != nil {
-		return GasRefundedEvent{}, fmt.Errorf("failed to get discriminator: %w", err)
-	}
+	var (
+		body GasRefundedEvent
+		err  error
+	)
+
+	discriminator := t.Type
 	if discriminator != "GAS_REFUNDED" {
 		return GasRefundedEvent{}, fmt.Errorf("cannot cast Event to GasRefundedEvent, discriminator is %s", discriminator)
 	}
-	var body GasRefundedEvent
 	err = json.Unmarshal(t.union, &body)
 	return body, err
 }
@@ -840,15 +924,15 @@ func (t *Event) MergeGasRefundedEvent(v GasRefundedEvent) error {
 
 // AsCallEvent returns the union data inside the Event as a CallEvent
 func (t Event) AsCallEvent() (CallEvent, error) {
-	var err error
-	discriminator, err := t.Discriminator()
-	if err != nil {
-		return CallEvent{}, fmt.Errorf("failed to get discriminator: %w", err)
-	}
+	var (
+		body CallEvent
+		err  error
+	)
+
+	discriminator := t.Type
 	if discriminator != "CALL" {
 		return CallEvent{}, fmt.Errorf("cannot cast Event to CallEvent, discriminator is %s", discriminator)
 	}
-	var body CallEvent
 	err = json.Unmarshal(t.union, &body)
 	return body, err
 }
@@ -882,15 +966,15 @@ func (t *Event) MergeCallEvent(v CallEvent) error {
 
 // AsMessageApprovedEvent returns the union data inside the Event as a MessageApprovedEvent
 func (t Event) AsMessageApprovedEvent() (MessageApprovedEvent, error) {
-	var err error
-	discriminator, err := t.Discriminator()
-	if err != nil {
-		return MessageApprovedEvent{}, fmt.Errorf("failed to get discriminator: %w", err)
-	}
+	var (
+		body MessageApprovedEvent
+		err  error
+	)
+
+	discriminator := t.Type
 	if discriminator != "MESSAGE_APPROVED" {
 		return MessageApprovedEvent{}, fmt.Errorf("cannot cast Event to MessageApprovedEvent, discriminator is %s", discriminator)
 	}
-	var body MessageApprovedEvent
 	err = json.Unmarshal(t.union, &body)
 	return body, err
 }
@@ -924,15 +1008,15 @@ func (t *Event) MergeMessageApprovedEvent(v MessageApprovedEvent) error {
 
 // AsMessageExecutedEvent returns the union data inside the Event as a MessageExecutedEvent
 func (t Event) AsMessageExecutedEvent() (MessageExecutedEvent, error) {
-	var err error
-	discriminator, err := t.Discriminator()
-	if err != nil {
-		return MessageExecutedEvent{}, fmt.Errorf("failed to get discriminator: %w", err)
-	}
+	var (
+		body MessageExecutedEvent
+		err  error
+	)
+
+	discriminator := t.Type
 	if discriminator != "MESSAGE_EXECUTED" {
 		return MessageExecutedEvent{}, fmt.Errorf("cannot cast Event to MessageExecutedEvent, discriminator is %s", discriminator)
 	}
-	var body MessageExecutedEvent
 	err = json.Unmarshal(t.union, &body)
 	return body, err
 }
@@ -966,15 +1050,15 @@ func (t *Event) MergeMessageExecutedEvent(v MessageExecutedEvent) error {
 
 // AsMessageExecutedEventV2 returns the union data inside the Event as a MessageExecutedEventV2
 func (t Event) AsMessageExecutedEventV2() (MessageExecutedEventV2, error) {
-	var err error
-	discriminator, err := t.Discriminator()
-	if err != nil {
-		return MessageExecutedEventV2{}, fmt.Errorf("failed to get discriminator: %w", err)
-	}
+	var (
+		body MessageExecutedEventV2
+		err  error
+	)
+
+	discriminator := t.Type
 	if discriminator != "MESSAGE_EXECUTED/V2" {
 		return MessageExecutedEventV2{}, fmt.Errorf("cannot cast Event to MessageExecutedEventV2, discriminator is %s", discriminator)
 	}
-	var body MessageExecutedEventV2
 	err = json.Unmarshal(t.union, &body)
 	return body, err
 }
@@ -1008,15 +1092,15 @@ func (t *Event) MergeMessageExecutedEventV2(v MessageExecutedEventV2) error {
 
 // AsCannotExecuteMessageEvent returns the union data inside the Event as a CannotExecuteMessageEvent
 func (t Event) AsCannotExecuteMessageEvent() (CannotExecuteMessageEvent, error) {
-	var err error
-	discriminator, err := t.Discriminator()
-	if err != nil {
-		return CannotExecuteMessageEvent{}, fmt.Errorf("failed to get discriminator: %w", err)
-	}
+	var (
+		body CannotExecuteMessageEvent
+		err  error
+	)
+
+	discriminator := t.Type
 	if discriminator != "CANNOT_EXECUTE_MESSAGE" {
 		return CannotExecuteMessageEvent{}, fmt.Errorf("cannot cast Event to CannotExecuteMessageEvent, discriminator is %s", discriminator)
 	}
-	var body CannotExecuteMessageEvent
 	err = json.Unmarshal(t.union, &body)
 	return body, err
 }
@@ -1050,15 +1134,15 @@ func (t *Event) MergeCannotExecuteMessageEvent(v CannotExecuteMessageEvent) erro
 
 // AsCannotExecuteMessageEventV2 returns the union data inside the Event as a CannotExecuteMessageEventV2
 func (t Event) AsCannotExecuteMessageEventV2() (CannotExecuteMessageEventV2, error) {
-	var err error
-	discriminator, err := t.Discriminator()
-	if err != nil {
-		return CannotExecuteMessageEventV2{}, fmt.Errorf("failed to get discriminator: %w", err)
-	}
+	var (
+		body CannotExecuteMessageEventV2
+		err  error
+	)
+
+	discriminator := t.Type
 	if discriminator != "CANNOT_EXECUTE_MESSAGE/V2" {
 		return CannotExecuteMessageEventV2{}, fmt.Errorf("cannot cast Event to CannotExecuteMessageEventV2, discriminator is %s", discriminator)
 	}
-	var body CannotExecuteMessageEventV2
 	err = json.Unmarshal(t.union, &body)
 	return body, err
 }
@@ -1092,15 +1176,15 @@ func (t *Event) MergeCannotExecuteMessageEventV2(v CannotExecuteMessageEventV2) 
 
 // AsCannotRouteMessageEvent returns the union data inside the Event as a CannotRouteMessageEvent
 func (t Event) AsCannotRouteMessageEvent() (CannotRouteMessageEvent, error) {
-	var err error
-	discriminator, err := t.Discriminator()
-	if err != nil {
-		return CannotRouteMessageEvent{}, fmt.Errorf("failed to get discriminator: %w", err)
-	}
+	var (
+		body CannotRouteMessageEvent
+		err  error
+	)
+
+	discriminator := t.Type
 	if discriminator != "CANNOT_ROUTE_MESSAGE" {
 		return CannotRouteMessageEvent{}, fmt.Errorf("cannot cast Event to CannotRouteMessageEvent, discriminator is %s", discriminator)
 	}
-	var body CannotRouteMessageEvent
 	err = json.Unmarshal(t.union, &body)
 	return body, err
 }
@@ -1134,15 +1218,15 @@ func (t *Event) MergeCannotRouteMessageEvent(v CannotRouteMessageEvent) error {
 
 // AsCannotExecuteTaskEvent returns the union data inside the Event as a CannotExecuteTaskEvent
 func (t Event) AsCannotExecuteTaskEvent() (CannotExecuteTaskEvent, error) {
-	var err error
-	discriminator, err := t.Discriminator()
-	if err != nil {
-		return CannotExecuteTaskEvent{}, fmt.Errorf("failed to get discriminator: %w", err)
-	}
+	var (
+		body CannotExecuteTaskEvent
+		err  error
+	)
+
+	discriminator := t.Type
 	if discriminator != "CANNOT_EXECUTE_TASK" {
 		return CannotExecuteTaskEvent{}, fmt.Errorf("cannot cast Event to CannotExecuteTaskEvent, discriminator is %s", discriminator)
 	}
-	var body CannotExecuteTaskEvent
 	err = json.Unmarshal(t.union, &body)
 	return body, err
 }
@@ -1176,15 +1260,15 @@ func (t *Event) MergeCannotExecuteTaskEvent(v CannotExecuteTaskEvent) error {
 
 // AsSignersRotatedEvent returns the union data inside the Event as a SignersRotatedEvent
 func (t Event) AsSignersRotatedEvent() (SignersRotatedEvent, error) {
-	var err error
-	discriminator, err := t.Discriminator()
-	if err != nil {
-		return SignersRotatedEvent{}, fmt.Errorf("failed to get discriminator: %w", err)
-	}
+	var (
+		body SignersRotatedEvent
+		err  error
+	)
+
+	discriminator := t.Type
 	if discriminator != "SIGNERS_ROTATED" {
 		return SignersRotatedEvent{}, fmt.Errorf("cannot cast Event to SignersRotatedEvent, discriminator is %s", discriminator)
 	}
-	var body SignersRotatedEvent
 	err = json.Unmarshal(t.union, &body)
 	return body, err
 }
@@ -1218,15 +1302,15 @@ func (t *Event) MergeSignersRotatedEvent(v SignersRotatedEvent) error {
 
 // AsITSLinkTokenStartedEvent returns the union data inside the Event as a ITSLinkTokenStartedEvent
 func (t Event) AsITSLinkTokenStartedEvent() (ITSLinkTokenStartedEvent, error) {
-	var err error
-	discriminator, err := t.Discriminator()
-	if err != nil {
-		return ITSLinkTokenStartedEvent{}, fmt.Errorf("failed to get discriminator: %w", err)
-	}
+	var (
+		body ITSLinkTokenStartedEvent
+		err  error
+	)
+
+	discriminator := t.Type
 	if discriminator != "ITS/LINK_TOKEN_STARTED" {
 		return ITSLinkTokenStartedEvent{}, fmt.Errorf("cannot cast Event to ITSLinkTokenStartedEvent, discriminator is %s", discriminator)
 	}
-	var body ITSLinkTokenStartedEvent
 	err = json.Unmarshal(t.union, &body)
 	return body, err
 }
@@ -1260,15 +1344,15 @@ func (t *Event) MergeITSLinkTokenStartedEvent(v ITSLinkTokenStartedEvent) error 
 
 // AsITSTokenMetadataRegisteredEvent returns the union data inside the Event as a ITSTokenMetadataRegisteredEvent
 func (t Event) AsITSTokenMetadataRegisteredEvent() (ITSTokenMetadataRegisteredEvent, error) {
-	var err error
-	discriminator, err := t.Discriminator()
-	if err != nil {
-		return ITSTokenMetadataRegisteredEvent{}, fmt.Errorf("failed to get discriminator: %w", err)
-	}
+	var (
+		body ITSTokenMetadataRegisteredEvent
+		err  error
+	)
+
+	discriminator := t.Type
 	if discriminator != "ITS/TOKEN_METADATA_REGISTERED" {
 		return ITSTokenMetadataRegisteredEvent{}, fmt.Errorf("cannot cast Event to ITSTokenMetadataRegisteredEvent, discriminator is %s", discriminator)
 	}
-	var body ITSTokenMetadataRegisteredEvent
 	err = json.Unmarshal(t.union, &body)
 	return body, err
 }
@@ -1302,15 +1386,15 @@ func (t *Event) MergeITSTokenMetadataRegisteredEvent(v ITSTokenMetadataRegistere
 
 // AsITSInterchainTokenDeploymentStartedEvent returns the union data inside the Event as a ITSInterchainTokenDeploymentStartedEvent
 func (t Event) AsITSInterchainTokenDeploymentStartedEvent() (ITSInterchainTokenDeploymentStartedEvent, error) {
-	var err error
-	discriminator, err := t.Discriminator()
-	if err != nil {
-		return ITSInterchainTokenDeploymentStartedEvent{}, fmt.Errorf("failed to get discriminator: %w", err)
-	}
+	var (
+		body ITSInterchainTokenDeploymentStartedEvent
+		err  error
+	)
+
+	discriminator := t.Type
 	if discriminator != "ITS/INTERCHAIN_TOKEN_DEPLOYMENT_STARTED" {
 		return ITSInterchainTokenDeploymentStartedEvent{}, fmt.Errorf("cannot cast Event to ITSInterchainTokenDeploymentStartedEvent, discriminator is %s", discriminator)
 	}
-	var body ITSInterchainTokenDeploymentStartedEvent
 	err = json.Unmarshal(t.union, &body)
 	return body, err
 }
@@ -1344,15 +1428,15 @@ func (t *Event) MergeITSInterchainTokenDeploymentStartedEvent(v ITSInterchainTok
 
 // AsITSInterchainTransferEvent returns the union data inside the Event as a ITSInterchainTransferEvent
 func (t Event) AsITSInterchainTransferEvent() (ITSInterchainTransferEvent, error) {
-	var err error
-	discriminator, err := t.Discriminator()
-	if err != nil {
-		return ITSInterchainTransferEvent{}, fmt.Errorf("failed to get discriminator: %w", err)
-	}
+	var (
+		body ITSInterchainTransferEvent
+		err  error
+	)
+
+	discriminator := t.Type
 	if discriminator != "ITS/INTERCHAIN_TRANSFER" {
 		return ITSInterchainTransferEvent{}, fmt.Errorf("cannot cast Event to ITSInterchainTransferEvent, discriminator is %s", discriminator)
 	}
-	var body ITSInterchainTransferEvent
 	err = json.Unmarshal(t.union, &body)
 	return body, err
 }
@@ -1386,15 +1470,15 @@ func (t *Event) MergeITSInterchainTransferEvent(v ITSInterchainTransferEvent) er
 
 // AsAppInterchainTransferSentEvent returns the union data inside the Event as a AppInterchainTransferSentEvent
 func (t Event) AsAppInterchainTransferSentEvent() (AppInterchainTransferSentEvent, error) {
-	var err error
-	discriminator, err := t.Discriminator()
-	if err != nil {
-		return AppInterchainTransferSentEvent{}, fmt.Errorf("failed to get discriminator: %w", err)
-	}
+	var (
+		body AppInterchainTransferSentEvent
+		err  error
+	)
+
+	discriminator := t.Type
 	if discriminator != "APP/INTERCHAIN_TRANSFER_SENT" {
 		return AppInterchainTransferSentEvent{}, fmt.Errorf("cannot cast Event to AppInterchainTransferSentEvent, discriminator is %s", discriminator)
 	}
-	var body AppInterchainTransferSentEvent
 	err = json.Unmarshal(t.union, &body)
 	return body, err
 }
@@ -1428,15 +1512,15 @@ func (t *Event) MergeAppInterchainTransferSentEvent(v AppInterchainTransferSentE
 
 // AsAppInterchainTransferReceivedEvent returns the union data inside the Event as a AppInterchainTransferReceivedEvent
 func (t Event) AsAppInterchainTransferReceivedEvent() (AppInterchainTransferReceivedEvent, error) {
-	var err error
-	discriminator, err := t.Discriminator()
-	if err != nil {
-		return AppInterchainTransferReceivedEvent{}, fmt.Errorf("failed to get discriminator: %w", err)
-	}
+	var (
+		body AppInterchainTransferReceivedEvent
+		err  error
+	)
+
+	discriminator := t.Type
 	if discriminator != "APP/INTERCHAIN_TRANSFER_RECEIVED" {
 		return AppInterchainTransferReceivedEvent{}, fmt.Errorf("cannot cast Event to AppInterchainTransferReceivedEvent, discriminator is %s", discriminator)
 	}
-	var body AppInterchainTransferReceivedEvent
 	err = json.Unmarshal(t.union, &body)
 	return body, err
 }
@@ -1568,15 +1652,19 @@ func (t *Event) UnmarshalJSON(b []byte) error {
 
 // AsPublishEventAcceptedResult returns the union data inside the PublishEventResultItem as a PublishEventAcceptedResult
 func (t PublishEventResultItem) AsPublishEventAcceptedResult() (PublishEventAcceptedResult, error) {
-	var err error
+	var (
+		body PublishEventAcceptedResult
+		err  error
+	)
+
 	discriminator, err := t.Discriminator()
 	if err != nil {
 		return PublishEventAcceptedResult{}, fmt.Errorf("failed to get discriminator: %w", err)
 	}
+
 	if discriminator != "ACCEPTED" {
 		return PublishEventAcceptedResult{}, fmt.Errorf("cannot cast PublishEventResultItem to PublishEventAcceptedResult, discriminator is %s", discriminator)
 	}
-	var body PublishEventAcceptedResult
 	err = json.Unmarshal(t.union, &body)
 	return body, err
 }
@@ -1642,15 +1730,19 @@ func (t *PublishEventResultItem) MergePublishEventAcceptedResult(v PublishEventA
 
 // AsPublishEventErrorResult returns the union data inside the PublishEventResultItem as a PublishEventErrorResult
 func (t PublishEventResultItem) AsPublishEventErrorResult() (PublishEventErrorResult, error) {
-	var err error
+	var (
+		body PublishEventErrorResult
+		err  error
+	)
+
 	discriminator, err := t.Discriminator()
 	if err != nil {
 		return PublishEventErrorResult{}, fmt.Errorf("failed to get discriminator: %w", err)
 	}
+
 	if discriminator != "ERROR" {
 		return PublishEventErrorResult{}, fmt.Errorf("cannot cast PublishEventResultItem to PublishEventErrorResult, discriminator is %s", discriminator)
 	}
-	var body PublishEventErrorResult
 	err = json.Unmarshal(t.union, &body)
 	return body, err
 }
@@ -1748,23 +1840,23 @@ func (t *PublishEventResultItem) UnmarshalJSON(b []byte) error {
 	return err
 }
 
-// AsConstructProofTask returns the union data inside the Task as a ConstructProofTask
-func (t Task) AsConstructProofTask() (ConstructProofTask, error) {
-	var err error
-	discriminator, err := t.Discriminator()
-	if err != nil {
-		return ConstructProofTask{}, fmt.Errorf("failed to get discriminator: %w", err)
-	}
+// AsConstructProofTaskItem returns the union data inside the TaskItem as a ConstructProofTaskItem
+func (t TaskItem) AsConstructProofTaskItem() (ConstructProofTaskItem, error) {
+	var (
+		body ConstructProofTaskItem
+		err  error
+	)
+
+	discriminator := t.Type
 	if discriminator != "CONSTRUCT_PROOF" {
-		return ConstructProofTask{}, fmt.Errorf("cannot cast Task to ConstructProofTask, discriminator is %s", discriminator)
+		return ConstructProofTaskItem{}, fmt.Errorf("cannot cast TaskItem to ConstructProofTaskItem, discriminator is %s", discriminator)
 	}
-	var body ConstructProofTask
 	err = json.Unmarshal(t.union, &body)
 	return body, err
 }
 
-// FromConstructProofTask overwrites any union data inside the Task as the provided ConstructProofTask
-func (t *Task) FromConstructProofTask(v ConstructProofTask) error {
+// FromConstructProofTaskItem overwrites any union data inside the TaskItem as the provided ConstructProofTaskItem
+func (t *TaskItem) FromConstructProofTaskItem(v ConstructProofTaskItem) error {
 	var err error
 	var b []byte
 	t.Type = "CONSTRUCT_PROOF"
@@ -1774,8 +1866,8 @@ func (t *Task) FromConstructProofTask(v ConstructProofTask) error {
 	return err
 }
 
-// MergeConstructProofTask performs a merge with any union data inside the Task, using the provided ConstructProofTask
-func (t *Task) MergeConstructProofTask(v ConstructProofTask) error {
+// MergeConstructProofTaskItem performs a merge with any union data inside the TaskItem, using the provided ConstructProofTaskItem
+func (t *TaskItem) MergeConstructProofTaskItem(v ConstructProofTaskItem) error {
 	var err error
 	var b []byte
 	var merged []byte
@@ -1790,23 +1882,23 @@ func (t *Task) MergeConstructProofTask(v ConstructProofTask) error {
 	return err
 }
 
-// AsExecuteTask returns the union data inside the Task as a ExecuteTask
-func (t Task) AsExecuteTask() (ExecuteTask, error) {
-	var err error
-	discriminator, err := t.Discriminator()
-	if err != nil {
-		return ExecuteTask{}, fmt.Errorf("failed to get discriminator: %w", err)
-	}
+// AsExecuteTaskItem returns the union data inside the TaskItem as a ExecuteTaskItem
+func (t TaskItem) AsExecuteTaskItem() (ExecuteTaskItem, error) {
+	var (
+		body ExecuteTaskItem
+		err  error
+	)
+
+	discriminator := t.Type
 	if discriminator != "EXECUTE" {
-		return ExecuteTask{}, fmt.Errorf("cannot cast Task to ExecuteTask, discriminator is %s", discriminator)
+		return ExecuteTaskItem{}, fmt.Errorf("cannot cast TaskItem to ExecuteTaskItem, discriminator is %s", discriminator)
 	}
-	var body ExecuteTask
 	err = json.Unmarshal(t.union, &body)
 	return body, err
 }
 
-// FromExecuteTask overwrites any union data inside the Task as the provided ExecuteTask
-func (t *Task) FromExecuteTask(v ExecuteTask) error {
+// FromExecuteTaskItem overwrites any union data inside the TaskItem as the provided ExecuteTaskItem
+func (t *TaskItem) FromExecuteTaskItem(v ExecuteTaskItem) error {
 	var err error
 	var b []byte
 	t.Type = "EXECUTE"
@@ -1816,8 +1908,8 @@ func (t *Task) FromExecuteTask(v ExecuteTask) error {
 	return err
 }
 
-// MergeExecuteTask performs a merge with any union data inside the Task, using the provided ExecuteTask
-func (t *Task) MergeExecuteTask(v ExecuteTask) error {
+// MergeExecuteTaskItem performs a merge with any union data inside the TaskItem, using the provided ExecuteTaskItem
+func (t *TaskItem) MergeExecuteTaskItem(v ExecuteTaskItem) error {
 	var err error
 	var b []byte
 	var merged []byte
@@ -1832,23 +1924,23 @@ func (t *Task) MergeExecuteTask(v ExecuteTask) error {
 	return err
 }
 
-// AsGatewayTransactionTask returns the union data inside the Task as a GatewayTransactionTask
-func (t Task) AsGatewayTransactionTask() (GatewayTransactionTask, error) {
-	var err error
-	discriminator, err := t.Discriminator()
-	if err != nil {
-		return GatewayTransactionTask{}, fmt.Errorf("failed to get discriminator: %w", err)
-	}
+// AsGatewayTransactionTaskItem returns the union data inside the TaskItem as a GatewayTransactionTaskItem
+func (t TaskItem) AsGatewayTransactionTaskItem() (GatewayTransactionTaskItem, error) {
+	var (
+		body GatewayTransactionTaskItem
+		err  error
+	)
+
+	discriminator := t.Type
 	if discriminator != "GATEWAY_TX" {
-		return GatewayTransactionTask{}, fmt.Errorf("cannot cast Task to GatewayTransactionTask, discriminator is %s", discriminator)
+		return GatewayTransactionTaskItem{}, fmt.Errorf("cannot cast TaskItem to GatewayTransactionTaskItem, discriminator is %s", discriminator)
 	}
-	var body GatewayTransactionTask
 	err = json.Unmarshal(t.union, &body)
 	return body, err
 }
 
-// FromGatewayTransactionTask overwrites any union data inside the Task as the provided GatewayTransactionTask
-func (t *Task) FromGatewayTransactionTask(v GatewayTransactionTask) error {
+// FromGatewayTransactionTaskItem overwrites any union data inside the TaskItem as the provided GatewayTransactionTaskItem
+func (t *TaskItem) FromGatewayTransactionTaskItem(v GatewayTransactionTaskItem) error {
 	var err error
 	var b []byte
 	t.Type = "GATEWAY_TX"
@@ -1858,8 +1950,8 @@ func (t *Task) FromGatewayTransactionTask(v GatewayTransactionTask) error {
 	return err
 }
 
-// MergeGatewayTransactionTask performs a merge with any union data inside the Task, using the provided GatewayTransactionTask
-func (t *Task) MergeGatewayTransactionTask(v GatewayTransactionTask) error {
+// MergeGatewayTransactionTaskItem performs a merge with any union data inside the TaskItem, using the provided GatewayTransactionTaskItem
+func (t *TaskItem) MergeGatewayTransactionTaskItem(v GatewayTransactionTaskItem) error {
 	var err error
 	var b []byte
 	var merged []byte
@@ -1874,23 +1966,23 @@ func (t *Task) MergeGatewayTransactionTask(v GatewayTransactionTask) error {
 	return err
 }
 
-// AsReactToWasmEventTask returns the union data inside the Task as a ReactToWasmEventTask
-func (t Task) AsReactToWasmEventTask() (ReactToWasmEventTask, error) {
-	var err error
-	discriminator, err := t.Discriminator()
-	if err != nil {
-		return ReactToWasmEventTask{}, fmt.Errorf("failed to get discriminator: %w", err)
-	}
+// AsReactToWasmEventTaskItem returns the union data inside the TaskItem as a ReactToWasmEventTaskItem
+func (t TaskItem) AsReactToWasmEventTaskItem() (ReactToWasmEventTaskItem, error) {
+	var (
+		body ReactToWasmEventTaskItem
+		err  error
+	)
+
+	discriminator := t.Type
 	if discriminator != "REACT_TO_WASM_EVENT" {
-		return ReactToWasmEventTask{}, fmt.Errorf("cannot cast Task to ReactToWasmEventTask, discriminator is %s", discriminator)
+		return ReactToWasmEventTaskItem{}, fmt.Errorf("cannot cast TaskItem to ReactToWasmEventTaskItem, discriminator is %s", discriminator)
 	}
-	var body ReactToWasmEventTask
 	err = json.Unmarshal(t.union, &body)
 	return body, err
 }
 
-// FromReactToWasmEventTask overwrites any union data inside the Task as the provided ReactToWasmEventTask
-func (t *Task) FromReactToWasmEventTask(v ReactToWasmEventTask) error {
+// FromReactToWasmEventTaskItem overwrites any union data inside the TaskItem as the provided ReactToWasmEventTaskItem
+func (t *TaskItem) FromReactToWasmEventTaskItem(v ReactToWasmEventTaskItem) error {
 	var err error
 	var b []byte
 	t.Type = "REACT_TO_WASM_EVENT"
@@ -1900,8 +1992,8 @@ func (t *Task) FromReactToWasmEventTask(v ReactToWasmEventTask) error {
 	return err
 }
 
-// MergeReactToWasmEventTask performs a merge with any union data inside the Task, using the provided ReactToWasmEventTask
-func (t *Task) MergeReactToWasmEventTask(v ReactToWasmEventTask) error {
+// MergeReactToWasmEventTaskItem performs a merge with any union data inside the TaskItem, using the provided ReactToWasmEventTaskItem
+func (t *TaskItem) MergeReactToWasmEventTaskItem(v ReactToWasmEventTaskItem) error {
 	var err error
 	var b []byte
 	var merged []byte
@@ -1916,23 +2008,23 @@ func (t *Task) MergeReactToWasmEventTask(v ReactToWasmEventTask) error {
 	return err
 }
 
-// AsRefundTask returns the union data inside the Task as a RefundTask
-func (t Task) AsRefundTask() (RefundTask, error) {
-	var err error
-	discriminator, err := t.Discriminator()
-	if err != nil {
-		return RefundTask{}, fmt.Errorf("failed to get discriminator: %w", err)
-	}
+// AsRefundTaskItem returns the union data inside the TaskItem as a RefundTaskItem
+func (t TaskItem) AsRefundTaskItem() (RefundTaskItem, error) {
+	var (
+		body RefundTaskItem
+		err  error
+	)
+
+	discriminator := t.Type
 	if discriminator != "REFUND" {
-		return RefundTask{}, fmt.Errorf("cannot cast Task to RefundTask, discriminator is %s", discriminator)
+		return RefundTaskItem{}, fmt.Errorf("cannot cast TaskItem to RefundTaskItem, discriminator is %s", discriminator)
 	}
-	var body RefundTask
 	err = json.Unmarshal(t.union, &body)
 	return body, err
 }
 
-// FromRefundTask overwrites any union data inside the Task as the provided RefundTask
-func (t *Task) FromRefundTask(v RefundTask) error {
+// FromRefundTaskItem overwrites any union data inside the TaskItem as the provided RefundTaskItem
+func (t *TaskItem) FromRefundTaskItem(v RefundTaskItem) error {
 	var err error
 	var b []byte
 	t.Type = "REFUND"
@@ -1942,8 +2034,8 @@ func (t *Task) FromRefundTask(v RefundTask) error {
 	return err
 }
 
-// MergeRefundTask performs a merge with any union data inside the Task, using the provided RefundTask
-func (t *Task) MergeRefundTask(v RefundTask) error {
+// MergeRefundTaskItem performs a merge with any union data inside the TaskItem, using the provided RefundTaskItem
+func (t *TaskItem) MergeRefundTaskItem(v RefundTaskItem) error {
 	var err error
 	var b []byte
 	var merged []byte
@@ -1958,23 +2050,23 @@ func (t *Task) MergeRefundTask(v RefundTask) error {
 	return err
 }
 
-// AsReactToExpiredSigningSessionTask returns the union data inside the Task as a ReactToExpiredSigningSessionTask
-func (t Task) AsReactToExpiredSigningSessionTask() (ReactToExpiredSigningSessionTask, error) {
-	var err error
-	discriminator, err := t.Discriminator()
-	if err != nil {
-		return ReactToExpiredSigningSessionTask{}, fmt.Errorf("failed to get discriminator: %w", err)
-	}
+// AsReactToExpiredSigningSessionTaskItem returns the union data inside the TaskItem as a ReactToExpiredSigningSessionTaskItem
+func (t TaskItem) AsReactToExpiredSigningSessionTaskItem() (ReactToExpiredSigningSessionTaskItem, error) {
+	var (
+		body ReactToExpiredSigningSessionTaskItem
+		err  error
+	)
+
+	discriminator := t.Type
 	if discriminator != "REACT_TO_EXPIRED_SIGNING_SESSION" {
-		return ReactToExpiredSigningSessionTask{}, fmt.Errorf("cannot cast Task to ReactToExpiredSigningSessionTask, discriminator is %s", discriminator)
+		return ReactToExpiredSigningSessionTaskItem{}, fmt.Errorf("cannot cast TaskItem to ReactToExpiredSigningSessionTaskItem, discriminator is %s", discriminator)
 	}
-	var body ReactToExpiredSigningSessionTask
 	err = json.Unmarshal(t.union, &body)
 	return body, err
 }
 
-// FromReactToExpiredSigningSessionTask overwrites any union data inside the Task as the provided ReactToExpiredSigningSessionTask
-func (t *Task) FromReactToExpiredSigningSessionTask(v ReactToExpiredSigningSessionTask) error {
+// FromReactToExpiredSigningSessionTaskItem overwrites any union data inside the TaskItem as the provided ReactToExpiredSigningSessionTaskItem
+func (t *TaskItem) FromReactToExpiredSigningSessionTaskItem(v ReactToExpiredSigningSessionTaskItem) error {
 	var err error
 	var b []byte
 	t.Type = "REACT_TO_EXPIRED_SIGNING_SESSION"
@@ -1984,8 +2076,8 @@ func (t *Task) FromReactToExpiredSigningSessionTask(v ReactToExpiredSigningSessi
 	return err
 }
 
-// MergeReactToExpiredSigningSessionTask performs a merge with any union data inside the Task, using the provided ReactToExpiredSigningSessionTask
-func (t *Task) MergeReactToExpiredSigningSessionTask(v ReactToExpiredSigningSessionTask) error {
+// MergeReactToExpiredSigningSessionTaskItem performs a merge with any union data inside the TaskItem, using the provided ReactToExpiredSigningSessionTaskItem
+func (t *TaskItem) MergeReactToExpiredSigningSessionTaskItem(v ReactToExpiredSigningSessionTaskItem) error {
 	var err error
 	var b []byte
 	var merged []byte
@@ -2000,23 +2092,23 @@ func (t *Task) MergeReactToExpiredSigningSessionTask(v ReactToExpiredSigningSess
 	return err
 }
 
-// AsReactToRetriablePollTask returns the union data inside the Task as a ReactToRetriablePollTask
-func (t Task) AsReactToRetriablePollTask() (ReactToRetriablePollTask, error) {
-	var err error
-	discriminator, err := t.Discriminator()
-	if err != nil {
-		return ReactToRetriablePollTask{}, fmt.Errorf("failed to get discriminator: %w", err)
-	}
+// AsReactToRetriablePollTaskItem returns the union data inside the TaskItem as a ReactToRetriablePollTaskItem
+func (t TaskItem) AsReactToRetriablePollTaskItem() (ReactToRetriablePollTaskItem, error) {
+	var (
+		body ReactToRetriablePollTaskItem
+		err  error
+	)
+
+	discriminator := t.Type
 	if discriminator != "REACT_TO_RETRIABLE_POLL" {
-		return ReactToRetriablePollTask{}, fmt.Errorf("cannot cast Task to ReactToRetriablePollTask, discriminator is %s", discriminator)
+		return ReactToRetriablePollTaskItem{}, fmt.Errorf("cannot cast TaskItem to ReactToRetriablePollTaskItem, discriminator is %s", discriminator)
 	}
-	var body ReactToRetriablePollTask
 	err = json.Unmarshal(t.union, &body)
 	return body, err
 }
 
-// FromReactToRetriablePollTask overwrites any union data inside the Task as the provided ReactToRetriablePollTask
-func (t *Task) FromReactToRetriablePollTask(v ReactToRetriablePollTask) error {
+// FromReactToRetriablePollTaskItem overwrites any union data inside the TaskItem as the provided ReactToRetriablePollTaskItem
+func (t *TaskItem) FromReactToRetriablePollTaskItem(v ReactToRetriablePollTaskItem) error {
 	var err error
 	var b []byte
 	t.Type = "REACT_TO_RETRIABLE_POLL"
@@ -2026,8 +2118,8 @@ func (t *Task) FromReactToRetriablePollTask(v ReactToRetriablePollTask) error {
 	return err
 }
 
-// MergeReactToRetriablePollTask performs a merge with any union data inside the Task, using the provided ReactToRetriablePollTask
-func (t *Task) MergeReactToRetriablePollTask(v ReactToRetriablePollTask) error {
+// MergeReactToRetriablePollTaskItem performs a merge with any union data inside the TaskItem, using the provided ReactToRetriablePollTaskItem
+func (t *TaskItem) MergeReactToRetriablePollTaskItem(v ReactToRetriablePollTaskItem) error {
 	var err error
 	var b []byte
 	var merged []byte
@@ -2042,23 +2134,23 @@ func (t *Task) MergeReactToRetriablePollTask(v ReactToRetriablePollTask) error {
 	return err
 }
 
-// AsVerifyTask returns the union data inside the Task as a VerifyTask
-func (t Task) AsVerifyTask() (VerifyTask, error) {
-	var err error
-	discriminator, err := t.Discriminator()
-	if err != nil {
-		return VerifyTask{}, fmt.Errorf("failed to get discriminator: %w", err)
-	}
+// AsVerifyTaskItem returns the union data inside the TaskItem as a VerifyTaskItem
+func (t TaskItem) AsVerifyTaskItem() (VerifyTaskItem, error) {
+	var (
+		body VerifyTaskItem
+		err  error
+	)
+
+	discriminator := t.Type
 	if discriminator != "VERIFY" {
-		return VerifyTask{}, fmt.Errorf("cannot cast Task to VerifyTask, discriminator is %s", discriminator)
+		return VerifyTaskItem{}, fmt.Errorf("cannot cast TaskItem to VerifyTaskItem, discriminator is %s", discriminator)
 	}
-	var body VerifyTask
 	err = json.Unmarshal(t.union, &body)
 	return body, err
 }
 
-// FromVerifyTask overwrites any union data inside the Task as the provided VerifyTask
-func (t *Task) FromVerifyTask(v VerifyTask) error {
+// FromVerifyTaskItem overwrites any union data inside the TaskItem as the provided VerifyTaskItem
+func (t *TaskItem) FromVerifyTaskItem(v VerifyTaskItem) error {
 	var err error
 	var b []byte
 	t.Type = "VERIFY"
@@ -2068,8 +2160,8 @@ func (t *Task) FromVerifyTask(v VerifyTask) error {
 	return err
 }
 
-// MergeVerifyTask performs a merge with any union data inside the Task, using the provided VerifyTask
-func (t *Task) MergeVerifyTask(v VerifyTask) error {
+// MergeVerifyTaskItem performs a merge with any union data inside the TaskItem, using the provided VerifyTaskItem
+func (t *TaskItem) MergeVerifyTaskItem(v VerifyTaskItem) error {
 	var err error
 	var b []byte
 	var merged []byte
@@ -2084,7 +2176,7 @@ func (t *Task) MergeVerifyTask(v VerifyTask) error {
 	return err
 }
 
-func (t Task) Discriminator() (string, error) {
+func (t TaskItem) Discriminator() (string, error) {
 	return string(t.Type), nil
 	// Fallback to unmarshaling from union if no property found
 	var discriminator struct {
@@ -2094,34 +2186,34 @@ func (t Task) Discriminator() (string, error) {
 	return discriminator.Discriminator, err
 }
 
-func (t Task) ValueByDiscriminator() (interface{}, error) {
+func (t TaskItem) ValueByDiscriminator() (interface{}, error) {
 	discriminator, err := t.Discriminator()
 	if err != nil {
 		return nil, err
 	}
 	switch discriminator {
 	case "CONSTRUCT_PROOF":
-		return t.AsConstructProofTask()
+		return t.AsConstructProofTaskItem()
 	case "EXECUTE":
-		return t.AsExecuteTask()
+		return t.AsExecuteTaskItem()
 	case "GATEWAY_TX":
-		return t.AsGatewayTransactionTask()
+		return t.AsGatewayTransactionTaskItem()
 	case "REACT_TO_EXPIRED_SIGNING_SESSION":
-		return t.AsReactToExpiredSigningSessionTask()
+		return t.AsReactToExpiredSigningSessionTaskItem()
 	case "REACT_TO_RETRIABLE_POLL":
-		return t.AsReactToRetriablePollTask()
+		return t.AsReactToRetriablePollTaskItem()
 	case "REACT_TO_WASM_EVENT":
-		return t.AsReactToWasmEventTask()
+		return t.AsReactToWasmEventTaskItem()
 	case "REFUND":
-		return t.AsRefundTask()
+		return t.AsRefundTaskItem()
 	case "VERIFY":
-		return t.AsVerifyTask()
+		return t.AsVerifyTaskItem()
 	default:
 		return nil, errors.New("unknown discriminator value: " + discriminator)
 	}
 }
 
-func (t Task) MarshalJSON() ([]byte, error) {
+func (t TaskItem) MarshalJSON() ([]byte, error) {
 	b, err := t.union.MarshalJSON()
 	if err != nil {
 		return nil, err
@@ -2143,7 +2235,7 @@ func (t Task) MarshalJSON() ([]byte, error) {
 	return b, err
 }
 
-func (t *Task) UnmarshalJSON(b []byte) error {
+func (t *TaskItem) UnmarshalJSON(b []byte) error {
 	err := t.union.UnmarshalJSON(b)
 	if err != nil {
 		return err
@@ -2166,8 +2258,11 @@ func (t *Task) UnmarshalJSON(b []byte) error {
 
 // AsWasmRequestWithObjectBody returns the union data inside the WasmRequest as a WasmRequestWithObjectBody
 func (t WasmRequest) AsWasmRequestWithObjectBody() (WasmRequestWithObjectBody, error) {
-	var err error
-	var body WasmRequestWithObjectBody
+	var (
+		body WasmRequestWithObjectBody
+		err  error
+	)
+
 	err = json.Unmarshal(t.union, &body)
 	return body, err
 }
@@ -2197,8 +2292,11 @@ func (t *WasmRequest) MergeWasmRequestWithObjectBody(v WasmRequestWithObjectBody
 
 // AsWasmRequestWithStringBody returns the union data inside the WasmRequest as a WasmRequestWithStringBody
 func (t WasmRequest) AsWasmRequestWithStringBody() (WasmRequestWithStringBody, error) {
-	var err error
-	var body WasmRequestWithStringBody
+	var (
+		body WasmRequestWithStringBody
+		err  error
+	)
+
 	err = json.Unmarshal(t.union, &body)
 	return body, err
 }
