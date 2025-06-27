@@ -3,8 +3,10 @@ package api_test
 import (
 	"encoding/json"
 	"testing"
+	"time"
 
 	"github.com/axelarnetwork/amplifier-relayer-api/v2/api"
+	"github.com/google/uuid"
 )
 
 func TestTaskItemDiscriminatorValidation(t *testing.T) {
@@ -486,6 +488,577 @@ func TestDiscriminatorEdgeCases(t *testing.T) {
 			t.Logf("✅ Correctly got error for empty discriminator: %v", err)
 		} else {
 			t.Logf("Discriminator value: %s", discriminator)
+		}
+	})
+}
+
+func TestTaskItemJSONMarshalingCompatibility(t *testing.T) {
+	tests := []struct {
+		name           string
+		setupTaskItem  func() api.TaskItem
+		expectedFields []string
+		validateJSON   func(t *testing.T, jsonData []byte)
+	}{
+		{
+			name: "GatewayTransactionTaskItem JSON marshaling",
+			setupTaskItem: func() api.TaskItem {
+				var item api.TaskItem
+				_ = item.FromGatewayTransactionTaskItem(api.GatewayTransactionTaskItem{
+					Chain:     "ethereum",
+					ID:        uuid.MustParse("123e4567-e89b-12d3-a456-426614174000"),
+					Type:      "GATEWAY_TX",
+					Timestamp: time.Date(2024, 1, 1, 12, 0, 0, 0, time.UTC),
+					Task: api.GatewayTransactionTask{
+						ExecuteData: []byte("test execute data"),
+					},
+					Meta: &api.DestinationChainTaskMetadata{
+						ScopedMessages: &[]api.CrossChainID{
+							{
+								MessageID:   "msg-123",
+								SourceChain: "ethereum",
+							},
+						},
+					},
+				})
+				return item
+			},
+			expectedFields: []string{"type", "chain", "id", "timestamp", "task", "meta"},
+			validateJSON: func(t *testing.T, jsonData []byte) {
+				var result map[string]interface{}
+				err := json.Unmarshal(jsonData, &result)
+				if err != nil {
+					t.Errorf("Failed to unmarshal JSON: %v", err)
+					return
+				}
+
+				// Verify required fields are present
+				if result["type"] != "GATEWAY_TX" {
+					t.Errorf("Expected type 'GATEWAY_TX', got %v", result["type"])
+				}
+				if result["chain"] != "ethereum" {
+					t.Errorf("Expected chain 'ethereum', got %v", result["chain"])
+				}
+
+				// Verify task structure
+				task, ok := result["task"].(map[string]interface{})
+				if !ok {
+					t.Errorf("Expected task to be an object")
+				} else {
+					if task["executeData"] == nil {
+						t.Errorf("Expected executeData field in task")
+					}
+				}
+
+				// Verify meta structure
+				meta, ok := result["meta"].(map[string]interface{})
+				if !ok {
+					t.Errorf("Expected meta to be an object")
+				} else {
+					scopedMessages, ok := meta["scopedMessages"].([]interface{})
+					if !ok || len(scopedMessages) == 0 {
+						t.Errorf("Expected scopedMessages array in meta")
+					}
+				}
+			},
+		},
+		{
+			name: "ExecuteTaskItem JSON marshaling",
+			setupTaskItem: func() api.TaskItem {
+				var item api.TaskItem
+				_ = item.FromExecuteTaskItem(api.ExecuteTaskItem{
+					Chain:     "ethereum",
+					ID:        uuid.MustParse("123e4567-e89b-12d3-a456-426614174001"),
+					Type:      "EXECUTE",
+					Timestamp: time.Date(2024, 1, 1, 12, 0, 0, 0, time.UTC),
+					Task: api.ExecuteTask{
+						AvailableGasBalance: api.Token{
+							Amount:  "1000000000000000000",
+							TokenID: nil,
+						},
+						Message: api.Message{
+							MessageID:          "msg-456",
+							SourceChain:        "ethereum",
+							SourceAddress:      "0x1234567890123456789012345678901234567890",
+							DestinationAddress: "0x0987654321098765432109876543210987654321",
+							PayloadHash:        []byte("payload hash"),
+						},
+						Payload: []byte("execute payload"),
+					},
+				})
+				return item
+			},
+			expectedFields: []string{"type", "chain", "id", "timestamp", "task"},
+			validateJSON: func(t *testing.T, jsonData []byte) {
+				var result map[string]interface{}
+				err := json.Unmarshal(jsonData, &result)
+				if err != nil {
+					t.Errorf("Failed to unmarshal JSON: %v", err)
+					return
+				}
+
+				// Verify required fields are present
+				if result["type"] != "EXECUTE" {
+					t.Errorf("Expected type 'EXECUTE', got %v", result["type"])
+				}
+
+				// Verify task structure
+				task, ok := result["task"].(map[string]interface{})
+				if !ok {
+					t.Errorf("Expected task to be an object")
+				} else {
+					// Verify availableGasBalance
+					gasBalance, ok := task["availableGasBalance"].(map[string]interface{})
+					if !ok {
+						t.Errorf("Expected availableGasBalance to be an object")
+					} else {
+						if gasBalance["amount"] != "1000000000000000000" {
+							t.Errorf("Expected amount '1000000000000000000', got %v", gasBalance["amount"])
+						}
+					}
+
+					// Verify message structure
+					message, ok := task["message"].(map[string]interface{})
+					if !ok {
+						t.Errorf("Expected message to be an object")
+					} else {
+						if message["messageID"] != "msg-456" {
+							t.Errorf("Expected messageID 'msg-456', got %v", message["messageID"])
+						}
+						if message["sourceChain"] != "ethereum" {
+							t.Errorf("Expected sourceChain 'ethereum', got %v", message["sourceChain"])
+						}
+					}
+
+					// Verify payload
+					if task["payload"] == nil {
+						t.Errorf("Expected payload field in task")
+					}
+				}
+			},
+		},
+		{
+			name: "ConstructProofTaskItem JSON marshaling",
+			setupTaskItem: func() api.TaskItem {
+				var item api.TaskItem
+				_ = item.FromConstructProofTaskItem(api.ConstructProofTaskItem{
+					Chain:     "ethereum",
+					ID:        uuid.MustParse("123e4567-e89b-12d3-a456-426614174002"),
+					Type:      "CONSTRUCT_PROOF",
+					Timestamp: time.Date(2024, 1, 1, 12, 0, 0, 0, time.UTC),
+					Task: api.ConstructProofTask{
+						Message: api.Message{
+							MessageID:          "msg-789",
+							SourceChain:        "ethereum",
+							SourceAddress:      "0x1234567890123456789012345678901234567890",
+							DestinationAddress: "0x0987654321098765432109876543210987654321",
+							PayloadHash:        []byte("proof payload hash"),
+						},
+						Payload: []byte("proof payload"),
+					},
+				})
+				return item
+			},
+			expectedFields: []string{"type", "chain", "id", "timestamp", "task"},
+			validateJSON: func(t *testing.T, jsonData []byte) {
+				var result map[string]interface{}
+				err := json.Unmarshal(jsonData, &result)
+				if err != nil {
+					t.Errorf("Failed to unmarshal JSON: %v", err)
+					return
+				}
+
+				// Verify required fields are present
+				if result["type"] != "CONSTRUCT_PROOF" {
+					t.Errorf("Expected type 'CONSTRUCT_PROOF', got %v", result["type"])
+				}
+
+				// Verify task structure
+				task, ok := result["task"].(map[string]interface{})
+				if !ok {
+					t.Errorf("Expected task to be an object")
+				} else {
+					// Verify message structure
+					message, ok := task["message"].(map[string]interface{})
+					if !ok {
+						t.Errorf("Expected message to be an object")
+					} else {
+						if message["messageID"] != "msg-789" {
+							t.Errorf("Expected messageID 'msg-789', got %v", message["messageID"])
+						}
+					}
+
+					// Verify payload
+					if task["payload"] == nil {
+						t.Errorf("Expected payload field in task")
+					}
+				}
+			},
+		},
+		{
+			name: "RefundTaskItem JSON marshaling",
+			setupTaskItem: func() api.TaskItem {
+				var item api.TaskItem
+				_ = item.FromRefundTaskItem(api.RefundTaskItem{
+					Chain:     "ethereum",
+					ID:        uuid.MustParse("123e4567-e89b-12d3-a456-426614174003"),
+					Type:      "REFUND",
+					Timestamp: time.Date(2024, 1, 1, 12, 0, 0, 0, time.UTC),
+					Task: api.RefundTask{
+						Message: api.Message{
+							MessageID:          "msg-refund",
+							SourceChain:        "ethereum",
+							SourceAddress:      "0x1234567890123456789012345678901234567890",
+							DestinationAddress: "0x0987654321098765432109876543210987654321",
+							PayloadHash:        []byte("refund payload hash"),
+						},
+						RefundRecipientAddress: "0x1111111111111111111111111111111111111111",
+						RemainingGasBalance: api.Token{
+							Amount:  "500000000000000000",
+							TokenID: nil,
+						},
+					},
+					Meta: &api.SourceChainTaskMetadata{
+						SourceContext: &api.MessageContext{
+							"key1": "value1",
+							"key2": "value2",
+						},
+					},
+				})
+				return item
+			},
+			expectedFields: []string{"type", "chain", "id", "timestamp", "task", "meta"},
+			validateJSON: func(t *testing.T, jsonData []byte) {
+				var result map[string]interface{}
+				err := json.Unmarshal(jsonData, &result)
+				if err != nil {
+					t.Errorf("Failed to unmarshal JSON: %v", err)
+					return
+				}
+
+				// Verify required fields are present
+				if result["type"] != "REFUND" {
+					t.Errorf("Expected type 'REFUND', got %v", result["type"])
+				}
+
+				// Verify task structure
+				task, ok := result["task"].(map[string]interface{})
+				if !ok {
+					t.Errorf("Expected task to be an object")
+				} else {
+					// Verify refundRecipientAddress
+					if task["refundRecipientAddress"] != "0x1111111111111111111111111111111111111111" {
+						t.Errorf("Expected refundRecipientAddress '0x1111111111111111111111111111111111111111', got %v", task["refundRecipientAddress"])
+					}
+
+					// Verify remainingGasBalance
+					gasBalance, ok := task["remainingGasBalance"].(map[string]interface{})
+					if !ok {
+						t.Errorf("Expected remainingGasBalance to be an object")
+					} else {
+						if gasBalance["amount"] != "500000000000000000" {
+							t.Errorf("Expected amount '500000000000000000', got %v", gasBalance["amount"])
+						}
+					}
+				}
+
+				// Verify meta structure
+				meta, ok := result["meta"].(map[string]interface{})
+				if !ok {
+					t.Errorf("Expected meta to be an object")
+				} else {
+					sourceContext, ok := meta["sourceContext"].(map[string]interface{})
+					if !ok {
+						t.Errorf("Expected sourceContext to be an object")
+					} else {
+						if sourceContext["key1"] != "value1" {
+							t.Errorf("Expected key1 'value1', got %v", sourceContext["key1"])
+						}
+					}
+				}
+			},
+		},
+		{
+			name: "VerifyTaskItem JSON marshaling",
+			setupTaskItem: func() api.TaskItem {
+				var item api.TaskItem
+				_ = item.FromVerifyTaskItem(api.VerifyTaskItem{
+					Chain:     "ethereum",
+					ID:        uuid.MustParse("123e4567-e89b-12d3-a456-426614174004"),
+					Type:      "VERIFY",
+					Timestamp: time.Date(2024, 1, 1, 12, 0, 0, 0, time.UTC),
+					Task: api.VerifyTask{
+						DestinationChain: "polygon",
+						Message: api.Message{
+							MessageID:          "msg-verify",
+							SourceChain:        "ethereum",
+							SourceAddress:      "0x1234567890123456789012345678901234567890",
+							DestinationAddress: "0x0987654321098765432109876543210987654321",
+							PayloadHash:        []byte("verify payload hash"),
+						},
+						Payload: []byte("verify payload"),
+					},
+					Meta: &api.SourceChainTaskMetadata{
+						SourceContext: &api.MessageContext{
+							"verifyKey": "verifyValue",
+						},
+					},
+				})
+				return item
+			},
+			expectedFields: []string{"type", "chain", "id", "timestamp", "task", "meta"},
+			validateJSON: func(t *testing.T, jsonData []byte) {
+				var result map[string]interface{}
+				err := json.Unmarshal(jsonData, &result)
+				if err != nil {
+					t.Errorf("Failed to unmarshal JSON: %v", err)
+					return
+				}
+
+				// Verify required fields are present
+				if result["type"] != "VERIFY" {
+					t.Errorf("Expected type 'VERIFY', got %v", result["type"])
+				}
+
+				// Verify task structure
+				task, ok := result["task"].(map[string]interface{})
+				if !ok {
+					t.Errorf("Expected task to be an object")
+				} else {
+					// Verify destinationChain
+					if task["destinationChain"] != "polygon" {
+						t.Errorf("Expected destinationChain 'polygon', got %v", task["destinationChain"])
+					}
+
+					// Verify message structure
+					message, ok := task["message"].(map[string]interface{})
+					if !ok {
+						t.Errorf("Expected message to be an object")
+					} else {
+						if message["messageID"] != "msg-verify" {
+							t.Errorf("Expected messageID 'msg-verify', got %v", message["messageID"])
+						}
+					}
+
+					// Verify payload
+					if task["payload"] == nil {
+						t.Errorf("Expected payload field in task")
+					}
+				}
+			},
+		},
+		{
+			name: "ReactToWasmEventTaskItem JSON marshaling",
+			setupTaskItem: func() api.TaskItem {
+				var item api.TaskItem
+				_ = item.FromReactToWasmEventTaskItem(api.ReactToWasmEventTaskItem{
+					Chain:     "ethereum",
+					ID:        uuid.MustParse("123e4567-e89b-12d3-a456-426614174005"),
+					Type:      "REACT_TO_WASM_EVENT",
+					Timestamp: time.Date(2024, 1, 1, 12, 0, 0, 0, time.UTC),
+					Task: api.ReactToWasmEventTask{
+						Event: api.WasmEvent{
+							Type: "wasm.event",
+							Attributes: []api.WasmEventAttribute{
+								{
+									Key:   "key1",
+									Value: "value1",
+								},
+								{
+									Key:   "key2",
+									Value: "value2",
+								},
+							},
+						},
+						Height: 12345,
+					},
+				})
+				return item
+			},
+			expectedFields: []string{"type", "chain", "id", "timestamp", "task"},
+			validateJSON: func(t *testing.T, jsonData []byte) {
+				var result map[string]interface{}
+				err := json.Unmarshal(jsonData, &result)
+				if err != nil {
+					t.Errorf("Failed to unmarshal JSON: %v", err)
+					return
+				}
+
+				// Verify required fields are present
+				if result["type"] != "REACT_TO_WASM_EVENT" {
+					t.Errorf("Expected type 'REACT_TO_WASM_EVENT', got %v", result["type"])
+				}
+
+				// Verify task structure
+				task, ok := result["task"].(map[string]interface{})
+				if !ok {
+					t.Errorf("Expected task to be an object")
+				} else {
+					// Verify event structure
+					event, ok := task["event"].(map[string]interface{})
+					if !ok {
+						t.Errorf("Expected event to be an object")
+					} else {
+						if event["type"] != "wasm.event" {
+							t.Errorf("Expected event type 'wasm.event', got %v", event["type"])
+						}
+
+						attributes, ok := event["attributes"].([]interface{})
+						if !ok || len(attributes) != 2 {
+							t.Errorf("Expected 2 attributes, got %v", attributes)
+						}
+					}
+
+					// Verify height
+					if task["height"] != float64(12345) {
+						t.Errorf("Expected height 12345, got %v", task["height"])
+					}
+				}
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			item := tt.setupTaskItem()
+
+			// Marshal to JSON
+			jsonData, err := json.Marshal(item)
+			if err != nil {
+				t.Fatalf("Failed to marshal task item: %v", err)
+			}
+
+			t.Logf("✅ Generated JSON: %s", string(jsonData))
+
+			// Validate JSON structure
+			tt.validateJSON(t, jsonData)
+
+			// Verify all expected fields are present
+			var result map[string]interface{}
+			err = json.Unmarshal(jsonData, &result)
+			if err != nil {
+				t.Fatalf("Failed to unmarshal JSON for field validation: %v", err)
+			}
+
+			for _, field := range tt.expectedFields {
+				if _, exists := result[field]; !exists {
+					t.Errorf("Expected field '%s' to be present in JSON", field)
+				}
+			}
+
+			// Test round-trip marshaling/unmarshaling
+			var newItem api.TaskItem
+			err = json.Unmarshal(jsonData, &newItem)
+			if err != nil {
+				t.Errorf("Failed to unmarshal task item: %v", err)
+			}
+
+			// Verify discriminator still works after round-trip
+			discriminator, err := newItem.Discriminator()
+			if err != nil {
+				t.Errorf("Failed to get discriminator after round-trip: %v", err)
+			} else {
+				t.Logf("✅ Discriminator after round-trip: %s", discriminator)
+			}
+
+			// Marshal again and compare
+			jsonData2, err := json.Marshal(newItem)
+			if err != nil {
+				t.Errorf("Failed to marshal task item after round-trip: %v", err)
+			}
+
+			if string(jsonData) != string(jsonData2) {
+				t.Errorf("JSON changed after round-trip marshaling/unmarshaling")
+				t.Logf("Original: %s", string(jsonData))
+				t.Logf("After round-trip: %s", string(jsonData2))
+			}
+		})
+	}
+}
+
+func TestTaskItemJSONMarshalingEdgeCases(t *testing.T) {
+	t.Run("Empty TaskItem JSON marshaling", func(t *testing.T) {
+		var item api.TaskItem
+		jsonData, err := json.Marshal(item)
+		if err != nil {
+			t.Errorf("Failed to marshal empty task item: %v", err)
+		} else {
+			t.Logf("✅ Empty TaskItem JSON: %s", string(jsonData))
+		}
+
+		// Should only contain the type field
+		var result map[string]interface{}
+		err = json.Unmarshal(jsonData, &result)
+		if err != nil {
+			t.Errorf("Failed to unmarshal empty task item JSON: %v", err)
+		}
+
+		if len(result) != 1 {
+			t.Errorf("Expected empty task item to have only 1 field, got %d", len(result))
+		}
+
+		if result["type"] != "" {
+			t.Errorf("Expected empty type field, got %v", result["type"])
+		}
+	})
+
+	t.Run("TaskItem with minimal data JSON marshaling", func(t *testing.T) {
+		var item api.TaskItem
+		_ = item.FromGatewayTransactionTaskItem(api.GatewayTransactionTaskItem{
+			Type: "GATEWAY_TX",
+			Task: api.GatewayTransactionTask{
+				ExecuteData: []byte{},
+			},
+		})
+
+		jsonData, err := json.Marshal(item)
+		if err != nil {
+			t.Errorf("Failed to marshal minimal task item: %v", err)
+		} else {
+			t.Logf("✅ Minimal TaskItem JSON: %s", string(jsonData))
+		}
+
+		// Verify it can be unmarshaled back
+		var newItem api.TaskItem
+		err = json.Unmarshal(jsonData, &newItem)
+		if err != nil {
+			t.Errorf("Failed to unmarshal minimal task item: %v", err)
+		}
+
+		// Verify discriminator works
+		discriminator, err := newItem.Discriminator()
+		if err != nil {
+			t.Errorf("Failed to get discriminator for minimal task item: %v", err)
+		} else {
+			t.Logf("✅ Minimal TaskItem discriminator: %s", discriminator)
+		}
+	})
+
+	t.Run("TaskItem with nil optional fields JSON marshaling", func(t *testing.T) {
+		var item api.TaskItem
+		_ = item.FromGatewayTransactionTaskItem(api.GatewayTransactionTaskItem{
+			Type: "GATEWAY_TX",
+			Task: api.GatewayTransactionTask{
+				ExecuteData: []byte("test"),
+			},
+			Meta: nil, // Explicitly nil
+		})
+
+		jsonData, err := json.Marshal(item)
+		if err != nil {
+			t.Errorf("Failed to marshal task item with nil meta: %v", err)
+		} else {
+			t.Logf("✅ TaskItem with nil meta JSON: %s", string(jsonData))
+		}
+
+		// Verify meta field is not present in JSON
+		var result map[string]interface{}
+		err = json.Unmarshal(jsonData, &result)
+		if err != nil {
+			t.Errorf("Failed to unmarshal task item with nil meta: %v", err)
+		}
+
+		if _, exists := result["meta"]; exists {
+			t.Errorf("Expected meta field to be omitted when nil")
 		}
 	})
 }
