@@ -4,11 +4,10 @@ import (
 	"encoding/json"
 	"testing"
 
+	"github.com/axelarnetwork/amplifier-relayer-api/v2/api"
+	"github.com/axelarnetwork/amplifier-relayer-api/v2/internal/funcs"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-
-	"github.com/axelarnetwork/amplifier-relayer-api/api"
-	"github.com/axelarnetwork/amplifier-relayer-api/internal/funcs"
 )
 
 func TestCostFromToken(t *testing.T) {

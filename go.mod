@@ -1,4 +1,4 @@
-module github.com/axelarnetwork/amplifier-relayer-api
+module github.com/axelarnetwork/amplifier-relayer-api/v2
 
 go 1.24.0
 

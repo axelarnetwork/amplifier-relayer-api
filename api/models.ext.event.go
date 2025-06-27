@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 
-	"github.com/axelarnetwork/amplifier-relayer-api/internal/funcs"
+	"github.com/axelarnetwork/amplifier-relayer-api/v2/internal/funcs"
 )
 
 // EventID returns id of the underlying event.

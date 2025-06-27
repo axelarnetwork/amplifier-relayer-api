@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/axelarnetwork/amplifier-relayer-api/api"
+	"github.com/axelarnetwork/amplifier-relayer-api/v2/api"
 )
 
 func TestTaskItemDiscriminatorValidation(t *testing.T) {
