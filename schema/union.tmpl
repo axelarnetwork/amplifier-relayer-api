@@ -6,12 +6,29 @@
         {{$element := . -}}
         // As{{ .Method }} returns the union data inside the {{$typeName}} as a {{.}}
         func (t {{$typeName}}) As{{ .Method }}() ({{.}}, error) {
-            var err error
+            var (
+                body {{.}}
+                err error
+            )
+
             {{if $discriminator -}}
-                discriminator, err := t.Discriminator()
-                if err != nil {
-                    return {{.}}{}, fmt.Errorf("failed to get discriminator: %w", err)
-                }
+                {{$hasProperty := false -}}
+                {{range $properties -}}
+                    {{if eq .GoFieldName $discriminator.PropertyName -}}
+                        {{$hasProperty = true -}}
+                    {{end -}}
+                {{end -}}
+
+                {{if $hasProperty -}}
+                    discriminator := t.{{ $discriminator.PropertyName }}
+                {{else -}}
+                     discriminator, err := t.Discriminator()
+                     if err != nil {
+                        return {{.}}{}, fmt.Errorf("failed to get discriminator: %w", err)
+                     }
+
+                {{end -}}
+
                 {{range $value, $type := $discriminator.Mapping -}}
                     {{if eq $type $element -}}
                         if discriminator != "{{$value}}" {
@@ -20,7 +37,7 @@
                     {{end -}}
                 {{end -}}
             {{end -}}
-            var body {{.}}
+
             err = json.Unmarshal(t.union, &body)
             return body, err
         }
