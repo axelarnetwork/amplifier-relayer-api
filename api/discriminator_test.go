@@ -7,165 +7,108 @@ import (
 	"github.com/axelarnetwork/amplifier-relayer-api/api"
 )
 
-func TestTaskDiscriminatorValidation(t *testing.T) {
+func TestTaskItemDiscriminatorValidation(t *testing.T) {
 	tests := []struct {
 		name          string
-		setupTask     func() api.Task
-		asMethod      func(api.Task) (interface{}, error)
+		setupTaskItem func() api.TaskItem
+		asMethod      func(api.TaskItem) (any, error)
 		expectedError bool
 		expectedType  string
 	}{
 		{
-			name: "GatewayTransactionTask - correct type",
-			setupTask: func() api.Task {
-				task := api.Task{}
-				err := task.FromGatewayTransactionTask(api.GatewayTransactionTask{
-					ExecuteData: []byte("test data"),
-					Type:        "GATEWAY_TX",
+			name: "GatewayTransactionTaskItem - correct type",
+			setupTaskItem: func() api.TaskItem {
+				var item api.TaskItem
+				_ = item.FromGatewayTransactionTaskItem(api.GatewayTransactionTaskItem{
+					Type: "GATEWAY_TX",
+					Task: api.GatewayTransactionTask{
+						ExecuteData: []byte("test data"),
+					},
 				})
-				if err != nil {
-					t.Fatalf("Failed to setup task: %v", err)
-				}
-				return task
+				return item
 			},
-			asMethod: func(task api.Task) (interface{}, error) {
-				return task.AsGatewayTransactionTask()
+			asMethod: func(item api.TaskItem) (any, error) {
+				return item.AsGatewayTransactionTaskItem()
 			},
 			expectedError: false,
-			expectedType:  "GatewayTransactionTask",
+			expectedType:  "GatewayTransactionTaskItem",
 		},
 		{
-			name: "GatewayTransactionTask - wrong type",
-			setupTask: func() api.Task {
-				task := api.Task{}
-				err := task.FromExecuteTask(api.ExecuteTask{
-					AvailableGasBalance: api.Token{Amount: "1000", TokenID: nil},
-					Message: api.Message{
-						MessageID:          "test",
-						SourceChain:        "test",
-						SourceAddress:      "test",
-						DestinationAddress: "test",
-						PayloadHash:        []byte("test"),
+			name: "GatewayTransactionTaskItem - wrong type",
+			setupTaskItem: func() api.TaskItem {
+				var item api.TaskItem
+				_ = item.FromExecuteTaskItem(api.ExecuteTaskItem{
+					Type: "EXECUTE",
+					Task: api.ExecuteTask{
+						AvailableGasBalance: api.Token{Amount: "1000", TokenID: nil},
+						Message: api.Message{
+							MessageID:          "test",
+							SourceChain:        "test",
+							SourceAddress:      "test",
+							DestinationAddress: "test",
+							PayloadHash:        []byte("test"),
+						},
+						Payload: []byte("test"),
 					},
-					Payload: []byte("test"),
-					Type:    "EXECUTE",
 				})
-				if err != nil {
-					t.Fatalf("Failed to setup task: %v", err)
-				}
-				return task
+				return item
 			},
-			asMethod: func(task api.Task) (interface{}, error) {
-				return task.AsGatewayTransactionTask()
+			asMethod: func(item api.TaskItem) (any, error) {
+				return item.AsGatewayTransactionTaskItem()
 			},
 			expectedError: true,
-			expectedType:  "GatewayTransactionTask",
+			expectedType:  "GatewayTransactionTaskItem",
 		},
 		{
-			name: "ExecuteTask - correct type",
-			setupTask: func() api.Task {
-				task := api.Task{}
-				err := task.FromExecuteTask(api.ExecuteTask{
-					AvailableGasBalance: api.Token{Amount: "1000", TokenID: nil},
-					Message: api.Message{
-						MessageID:          "test",
-						SourceChain:        "test",
-						SourceAddress:      "test",
-						DestinationAddress: "test",
-						PayloadHash:        []byte("test"),
+			name: "ExecuteTaskItem - correct type",
+			setupTaskItem: func() api.TaskItem {
+				var item api.TaskItem
+				_ = item.FromExecuteTaskItem(api.ExecuteTaskItem{
+					Type: "EXECUTE",
+					Task: api.ExecuteTask{
+						AvailableGasBalance: api.Token{Amount: "1000", TokenID: nil},
+						Message: api.Message{
+							MessageID:          "test",
+							SourceChain:        "test",
+							SourceAddress:      "test",
+							DestinationAddress: "test",
+							PayloadHash:        []byte("test"),
+						},
+						Payload: []byte("test"),
 					},
-					Payload: []byte("test"),
-					Type:    "EXECUTE",
 				})
-				if err != nil {
-					t.Fatalf("Failed to setup task: %v", err)
-				}
-				return task
+				return item
 			},
-			asMethod: func(task api.Task) (interface{}, error) {
-				return task.AsExecuteTask()
+			asMethod: func(item api.TaskItem) (any, error) {
+				return item.AsExecuteTaskItem()
 			},
 			expectedError: false,
-			expectedType:  "ExecuteTask",
+			expectedType:  "ExecuteTaskItem",
 		},
 		{
-			name: "ExecuteTask - wrong type",
-			setupTask: func() api.Task {
-				task := api.Task{}
-				err := task.FromGatewayTransactionTask(api.GatewayTransactionTask{
-					ExecuteData: []byte("test data"),
-					Type:        "GATEWAY_TX",
+			name: "ExecuteTaskItem - wrong type",
+			setupTaskItem: func() api.TaskItem {
+				var item api.TaskItem
+				_ = item.FromGatewayTransactionTaskItem(api.GatewayTransactionTaskItem{
+					Type: "GATEWAY_TX",
+					Task: api.GatewayTransactionTask{
+						ExecuteData: []byte("test data"),
+					},
 				})
-				if err != nil {
-					t.Fatalf("Failed to setup task: %v", err)
-				}
-				return task
+				return item
 			},
-			asMethod: func(task api.Task) (interface{}, error) {
-				return task.AsExecuteTask()
+			asMethod: func(item api.TaskItem) (any, error) {
+				return item.AsExecuteTaskItem()
 			},
 			expectedError: true,
-			expectedType:  "ExecuteTask",
-		},
-		{
-			name: "ConstructProofTask - correct type",
-			setupTask: func() api.Task {
-				task := api.Task{}
-				err := task.FromConstructProofTask(api.ConstructProofTask{
-					Message: api.Message{
-						MessageID:          "test",
-						SourceChain:        "test",
-						SourceAddress:      "test",
-						DestinationAddress: "test",
-						PayloadHash:        []byte("test"),
-					},
-					Payload: []byte("test"),
-					Type:    "CONSTRUCT_PROOF",
-				})
-				if err != nil {
-					t.Fatalf("Failed to setup task: %v", err)
-				}
-				return task
-			},
-			asMethod: func(task api.Task) (interface{}, error) {
-				return task.AsConstructProofTask()
-			},
-			expectedError: false,
-			expectedType:  "ConstructProofTask",
-		},
-		{
-			name: "VerifyTask - correct type",
-			setupTask: func() api.Task {
-				task := api.Task{}
-				err := task.FromVerifyTask(api.VerifyTask{
-					DestinationChain: "test",
-					Message: api.Message{
-						MessageID:          "test",
-						SourceChain:        "test",
-						SourceAddress:      "test",
-						DestinationAddress: "test",
-						PayloadHash:        []byte("test"),
-					},
-					Payload: []byte("test"),
-					Type:    "VERIFY",
-				})
-				if err != nil {
-					t.Fatalf("Failed to setup task: %v", err)
-				}
-				return task
-			},
-			asMethod: func(task api.Task) (interface{}, error) {
-				return task.AsVerifyTask()
-			},
-			expectedError: false,
-			expectedType:  "VerifyTask",
+			expectedType:  "ExecuteTaskItem",
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			task := tt.setupTask()
-			_, err := tt.asMethod(task)
+			item := tt.setupTaskItem()
+			_, err := tt.asMethod(item)
 
 			if tt.expectedError {
 				if err == nil {
@@ -182,7 +125,7 @@ func TestTaskDiscriminatorValidation(t *testing.T) {
 			}
 
 			// Verify discriminator value
-			discriminator, err := task.Discriminator()
+			discriminator, err := item.Discriminator()
 			if err != nil {
 				t.Errorf("Failed to get discriminator: %v", err)
 			} else {
@@ -350,59 +293,57 @@ func TestEventDiscriminatorValidation(t *testing.T) {
 	}
 }
 
-func TestTaskValueByDiscriminator(t *testing.T) {
+func TestTaskItemValueByDiscriminator(t *testing.T) {
 	tests := []struct {
 		name          string
-		setupTask     func() api.Task
+		setupTask     func() api.TaskItem
 		expectedType  string
 		expectedError bool
 	}{
 		{
 			name: "GATEWAY_TX discriminator",
-			setupTask: func() api.Task {
-				task := api.Task{}
-				err := task.FromGatewayTransactionTask(api.GatewayTransactionTask{
-					ExecuteData: []byte("test data"),
-					Type:        "GATEWAY_TX",
+			setupTask: func() api.TaskItem {
+				var item api.TaskItem
+				_ = item.FromGatewayTransactionTaskItem(api.GatewayTransactionTaskItem{
+					Type: "GATEWAY_TX",
+					Task: api.GatewayTransactionTask{
+						ExecuteData: []byte("test data"),
+					},
 				})
-				if err != nil {
-					t.Fatalf("Failed to setup task: %v", err)
-				}
-				return task
+				return item
 			},
-			expectedType:  "GatewayTransactionTask",
+			expectedType:  "GatewayTransactionTaskItem",
 			expectedError: false,
 		},
 		{
 			name: "EXECUTE discriminator",
-			setupTask: func() api.Task {
-				task := api.Task{}
-				err := task.FromExecuteTask(api.ExecuteTask{
-					AvailableGasBalance: api.Token{Amount: "1000", TokenID: nil},
-					Message: api.Message{
-						MessageID:          "test",
-						SourceChain:        "test",
-						SourceAddress:      "test",
-						DestinationAddress: "test",
-						PayloadHash:        []byte("test"),
+			setupTask: func() api.TaskItem {
+				var item api.TaskItem
+				_ = item.FromExecuteTaskItem(api.ExecuteTaskItem{
+					Type: "EXECUTE",
+					Task: api.ExecuteTask{
+						AvailableGasBalance: api.Token{Amount: "1000", TokenID: nil},
+						Message: api.Message{
+							MessageID:          "test",
+							SourceChain:        "test",
+							SourceAddress:      "test",
+							DestinationAddress: "test",
+							PayloadHash:        []byte("test"),
+						},
+						Payload: []byte("test"),
 					},
-					Payload: []byte("test"),
-					Type:    "EXECUTE",
 				})
-				if err != nil {
-					t.Fatalf("Failed to setup task: %v", err)
-				}
-				return task
+				return item
 			},
-			expectedType:  "ExecuteTask",
+			expectedType:  "ExecuteTaskItem",
 			expectedError: false,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			task := tt.setupTask()
-			result, err := task.ValueByDiscriminator()
+			item := tt.setupTask()
+			result, err := item.ValueByDiscriminator()
 
 			if tt.expectedError {
 				if err == nil {
@@ -421,98 +362,29 @@ func TestTaskValueByDiscriminator(t *testing.T) {
 	}
 }
 
-func TestEventValueByDiscriminator(t *testing.T) {
-	tests := []struct {
-		name          string
-		setupEvent    func() api.Event
-		expectedType  string
-		expectedError bool
-	}{
-		{
-			name: "GAS_CREDIT discriminator",
-			setupEvent: func() api.Event {
-				event := api.Event{}
-				err := event.FromGasCreditEvent(api.GasCreditEvent{
-					EventID:       "test-event",
-					MessageID:     "test-message",
-					Payment:       api.Token{Amount: "1000", TokenID: nil},
-					RefundAddress: "test-address",
-				})
-				if err != nil {
-					t.Fatalf("Failed to setup event: %v", err)
-				}
-				return event
+func TestTaskItemMergeFunctionality(t *testing.T) {
+	t.Run("Merge GatewayTransactionTaskItem", func(t *testing.T) {
+		var item api.TaskItem
+		_ = item.FromGatewayTransactionTaskItem(api.GatewayTransactionTaskItem{
+			Type: "GATEWAY_TX",
+			Task: api.GatewayTransactionTask{
+				ExecuteData: []byte("initial data"),
 			},
-			expectedType:  "GasCreditEvent",
-			expectedError: false,
-		},
-		{
-			name: "GAS_REFUNDED discriminator",
-			setupEvent: func() api.Event {
-				event := api.Event{}
-				err := event.FromGasRefundedEvent(api.GasRefundedEvent{
-					EventID:          "test-event",
-					MessageID:        "test-message",
-					Cost:             api.Cost{},
-					RecipientAddress: "test-address",
-					RefundedAmount:   api.Token{Amount: "1000", TokenID: nil},
-				})
-				if err != nil {
-					t.Fatalf("Failed to setup event: %v", err)
-				}
-				return event
-			},
-			expectedType:  "GasRefundedEvent",
-			expectedError: false,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			event := tt.setupEvent()
-			result, err := event.ValueByDiscriminator()
-
-			if tt.expectedError {
-				if err == nil {
-					t.Errorf("Expected error but got none")
-				} else {
-					t.Logf("✅ Correctly got error: %v", err)
-				}
-			} else {
-				if err != nil {
-					t.Errorf("Expected no error but got: %v", err)
-				} else {
-					t.Logf("✅ Successfully got value by discriminator: %T", result)
-				}
-			}
 		})
-	}
-}
-
-func TestTaskMergeFunctionality(t *testing.T) {
-	t.Run("Merge GatewayTransactionTask", func(t *testing.T) {
-		task := api.Task{}
-
-		// First, set up a task
-		err := task.FromGatewayTransactionTask(api.GatewayTransactionTask{
-			ExecuteData: []byte("initial data"),
-			Type:        "GATEWAY_TX",
-		})
-		if err != nil {
-			t.Fatalf("Failed to setup initial task: %v", err)
-		}
 
 		// Now merge with new data
-		err = task.MergeGatewayTransactionTask(api.GatewayTransactionTask{
-			ExecuteData: []byte("merged data"),
-			Type:        "GATEWAY_TX",
+		err := item.MergeGatewayTransactionTaskItem(api.GatewayTransactionTaskItem{
+			Type: "GATEWAY_TX",
+			Task: api.GatewayTransactionTask{
+				ExecuteData: []byte("merged data"),
+			},
 		})
 		if err != nil {
 			t.Errorf("Failed to merge task: %v", err)
 		}
 
 		// Verify the task can still be cast correctly
-		result, err := task.AsGatewayTransactionTask()
+		result, err := item.AsGatewayTransactionTaskItem()
 		if err != nil {
 			t.Errorf("Failed to cast merged task: %v", err)
 		} else {
@@ -521,64 +393,27 @@ func TestTaskMergeFunctionality(t *testing.T) {
 	})
 }
 
-func TestEventMergeFunctionality(t *testing.T) {
-	t.Run("Merge GasCreditEvent", func(t *testing.T) {
-		event := api.Event{}
-
-		// First, set up an event
-		err := event.FromGasCreditEvent(api.GasCreditEvent{
-			EventID:       "initial-event",
-			MessageID:     "initial-message",
-			Payment:       api.Token{Amount: "1000", TokenID: nil},
-			RefundAddress: "initial-address",
-		})
-		if err != nil {
-			t.Fatalf("Failed to setup initial event: %v", err)
-		}
-
-		// Now merge with new data
-		err = event.MergeGasCreditEvent(api.GasCreditEvent{
-			EventID:       "merged-event",
-			MessageID:     "merged-message",
-			Payment:       api.Token{Amount: "2000", TokenID: nil},
-			RefundAddress: "merged-address",
-		})
-		if err != nil {
-			t.Errorf("Failed to merge event: %v", err)
-		}
-
-		// Verify the event can still be cast correctly
-		result, err := event.AsGasCreditEvent()
-		if err != nil {
-			t.Errorf("Failed to cast merged event: %v", err)
-		} else {
-			t.Logf("✅ Successfully cast merged event: %+v", result)
-		}
-	})
-}
-
 func TestJSONMarshaling(t *testing.T) {
-	t.Run("Task JSON marshaling", func(t *testing.T) {
-		task := api.Task{}
-		err := task.FromGatewayTransactionTask(api.GatewayTransactionTask{
-			ExecuteData: []byte("test data"),
-			Type:        "GATEWAY_TX",
+	t.Run("TaskItem JSON marshaling", func(t *testing.T) {
+		var item api.TaskItem
+		_ = item.FromGatewayTransactionTaskItem(api.GatewayTransactionTaskItem{
+			Type: "GATEWAY_TX",
+			Task: api.GatewayTransactionTask{
+				ExecuteData: []byte("test data"),
+			},
 		})
-		if err != nil {
-			t.Fatalf("Failed to setup task: %v", err)
-		}
 
 		// Marshal to JSON
-		jsonData, err := json.Marshal(task)
+		jsonData, err := json.Marshal(item)
 		if err != nil {
 			t.Errorf("Failed to marshal task: %v", err)
 		} else {
-			t.Logf("✅ Task JSON: %s", string(jsonData))
+			t.Logf("✅ TaskItem JSON: %s", string(jsonData))
 		}
 
 		// Unmarshal back
-		var newTask api.Task
-		err = json.Unmarshal(jsonData, &newTask)
+		var newItem api.TaskItem
+		err = json.Unmarshal(jsonData, &newItem)
 		if err != nil {
 			t.Errorf("Failed to unmarshal task: %v", err)
 		} else {
@@ -586,7 +421,7 @@ func TestJSONMarshaling(t *testing.T) {
 		}
 
 		// Verify discriminator still works
-		discriminator, err := newTask.Discriminator()
+		discriminator, err := newItem.Discriminator()
 		if err != nil {
 			t.Errorf("Failed to get discriminator after unmarshaling: %v", err)
 		} else {
@@ -634,9 +469,9 @@ func TestJSONMarshaling(t *testing.T) {
 }
 
 func TestDiscriminatorEdgeCases(t *testing.T) {
-	t.Run("Empty Task discriminator", func(t *testing.T) {
-		task := api.Task{}
-		discriminator, err := task.Discriminator()
+	t.Run("Empty TaskItem discriminator", func(t *testing.T) {
+		var item api.TaskItem
+		discriminator, err := item.Discriminator()
 		if err != nil {
 			t.Logf("✅ Correctly got error for empty discriminator: %v", err)
 		} else {

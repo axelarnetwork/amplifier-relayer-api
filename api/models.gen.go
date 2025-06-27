@@ -250,9 +250,8 @@ type CannotRouteMessageReason string
 
 // ConstructProofTask defines model for ConstructProofTask.
 type ConstructProofTask struct {
-	Message Message  `json:"message"`
-	Payload []byte   `json:"payload"`
-	Type    TaskType `json:"type"`
+	Message Message `json:"message"`
+	Payload []byte  `json:"payload"`
 }
 
 // ConstructProofTaskItem defines model for ConstructProofTaskItem.
@@ -315,10 +314,9 @@ type EventType string
 
 // ExecuteTask defines model for ExecuteTask.
 type ExecuteTask struct {
-	AvailableGasBalance Token    `json:"availableGasBalance"`
-	Message             Message  `json:"message"`
-	Payload             []byte   `json:"payload"`
-	Type                TaskType `json:"type"`
+	AvailableGasBalance Token   `json:"availableGasBalance"`
+	Message             Message `json:"message"`
+	Payload             []byte  `json:"payload"`
 }
 
 // ExecuteTaskItem defines model for ExecuteTaskItem.
@@ -367,8 +365,7 @@ type GasRefundedEvent struct {
 
 // GatewayTransactionTask defines model for GatewayTransactionTask.
 type GatewayTransactionTask struct {
-	ExecuteData []byte   `json:"executeData"`
-	Type        TaskType `json:"type"`
+	ExecuteData []byte `json:"executeData"`
 }
 
 // GatewayTransactionTaskItem defines model for GatewayTransactionTaskItem.
@@ -560,7 +557,6 @@ type ReactToExpiredSigningSessionTask struct {
 	InvokedContractAddress Address     `json:"invokedContractAddress"`
 	RequestPayload         WasmRequest `json:"requestPayload"`
 	SessionID              uint64      `json:"sessionID"`
-	Type                   TaskType    `json:"type"`
 }
 
 // ReactToExpiredSigningSessionTaskItem defines model for ReactToExpiredSigningSessionTaskItem.
@@ -583,7 +579,6 @@ type ReactToRetriablePollTask struct {
 	PollID                 uint64               `json:"pollID"`
 	QuorumReachedEvents    []QuorumReachedEvent `json:"quorumReachedEvents"`
 	RequestPayload         WasmRequest          `json:"requestPayload"`
-	Type                   TaskType             `json:"type"`
 }
 
 // ReactToRetriablePollTaskItem defines model for ReactToRetriablePollTaskItem.
@@ -599,7 +594,6 @@ type ReactToRetriablePollTaskItem struct {
 type ReactToWasmEventTask struct {
 	Event  WasmEvent `json:"event"`
 	Height int64     `json:"height"`
-	Type   TaskType  `json:"type"`
 }
 
 // ReactToWasmEventTaskItem defines model for ReactToWasmEventTaskItem.
@@ -613,10 +607,9 @@ type ReactToWasmEventTaskItem struct {
 
 // RefundTask defines model for RefundTask.
 type RefundTask struct {
-	Message                Message  `json:"message"`
-	RefundRecipientAddress Address  `json:"refundRecipientAddress"`
-	RemainingGasBalance    Token    `json:"remainingGasBalance"`
-	Type                   TaskType `json:"type"`
+	Message                Message `json:"message"`
+	RefundRecipientAddress Address `json:"refundRecipientAddress"`
+	RemainingGasBalance    Token   `json:"remainingGasBalance"`
 }
 
 // RefundTaskItem defines model for RefundTaskItem.
@@ -692,10 +685,9 @@ type VerificationStatus string
 
 // VerifyTask defines model for VerifyTask.
 type VerifyTask struct {
-	DestinationChain string   `json:"destinationChain"`
-	Message          Message  `json:"message"`
-	Payload          []byte   `json:"payload"`
-	Type             TaskType `json:"type"`
+	DestinationChain string  `json:"destinationChain"`
+	Message          Message `json:"message"`
+	Payload          []byte  `json:"payload"`
 }
 
 // VerifyTaskItem defines model for VerifyTaskItem.
