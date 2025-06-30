@@ -256,10 +256,7 @@ type ConstructProofTask struct {
 
 // ConstructProofTaskItem defines model for ConstructProofTaskItem.
 type ConstructProofTaskItem struct {
-	Chain     string             `json:"chain"`
-	ID        TaskItemID         `json:"id"`
-	Task      ConstructProofTask `json:"task"`
-	Timestamp time.Time          `json:"timestamp"`
+	Task ConstructProofTask `json:"task"`
 }
 
 // ContractQueryResponse defines model for ContractQueryResponse.
@@ -320,10 +317,7 @@ type ExecuteTask struct {
 
 // ExecuteTaskItem defines model for ExecuteTaskItem.
 type ExecuteTaskItem struct {
-	Chain     string      `json:"chain"`
-	ID        TaskItemID  `json:"id"`
-	Task      ExecuteTask `json:"task"`
-	Timestamp time.Time   `json:"timestamp"`
+	Task ExecuteTask `json:"task"`
 }
 
 // Fee defines model for Fee.
@@ -368,19 +362,15 @@ type GatewayTransactionTask struct {
 
 // GatewayTransactionTaskItem defines model for GatewayTransactionTaskItem.
 type GatewayTransactionTaskItem struct {
-	Chain string     `json:"chain"`
-	ID    TaskItemID `json:"id"`
-
 	// Meta Metadata attached to GATEWAY_TX and REACT_TO_EXPIRED_SIGNING_SESSION tasks.
 	// The property `scopedMessages` can be omitted if the task isn't associated with any message (e.g. when executing `rotateSigners` https://github.com/axelarnetwork/axelar-gmp-sdk-solidity/blob/432449d7b330ec6edf5a8e0746644a253486ca87/contracts/gateway/AxelarAmplifierGateway.sol#L103C14-L103C27).
-	Meta      *DestinationChainTaskMetadata `json:"meta,omitempty"`
-	Task      GatewayTransactionTask        `json:"task"`
-	Timestamp time.Time                     `json:"timestamp"`
+	Meta *DestinationChainTaskMetadata `json:"meta,omitempty"`
+	Task GatewayTransactionTask        `json:"task"`
 }
 
 // GetTasksResult defines model for GetTasksResult.
 type GetTasksResult struct {
-	Tasks []TaskItem `json:"tasks"`
+	Tasks []TaskEnvelope `json:"tasks"`
 }
 
 // ITSInterchainTokenDeploymentStartedEvent defines model for ITSInterchainTokenDeploymentStartedEvent.
@@ -558,14 +548,10 @@ type ReactToExpiredSigningSessionTask struct {
 
 // ReactToExpiredSigningSessionTaskItem defines model for ReactToExpiredSigningSessionTaskItem.
 type ReactToExpiredSigningSessionTaskItem struct {
-	Chain string     `json:"chain"`
-	ID    TaskItemID `json:"id"`
-
 	// Meta Metadata attached to GATEWAY_TX and REACT_TO_EXPIRED_SIGNING_SESSION tasks.
 	// The property `scopedMessages` can be omitted if the task isn't associated with any message (e.g. when executing `rotateSigners` https://github.com/axelarnetwork/axelar-gmp-sdk-solidity/blob/432449d7b330ec6edf5a8e0746644a253486ca87/contracts/gateway/AxelarAmplifierGateway.sol#L103C14-L103C27).
-	Meta      *DestinationChainTaskMetadata    `json:"meta,omitempty"`
-	Task      ReactToExpiredSigningSessionTask `json:"task"`
-	Timestamp time.Time                        `json:"timestamp"`
+	Meta *DestinationChainTaskMetadata    `json:"meta,omitempty"`
+	Task ReactToExpiredSigningSessionTask `json:"task"`
 }
 
 // ReactToRetriablePollTask defines model for ReactToRetriablePollTask.
@@ -579,10 +565,7 @@ type ReactToRetriablePollTask struct {
 
 // ReactToRetriablePollTaskItem defines model for ReactToRetriablePollTaskItem.
 type ReactToRetriablePollTaskItem struct {
-	Chain     string                   `json:"chain"`
-	ID        TaskItemID               `json:"id"`
-	Task      ReactToRetriablePollTask `json:"task"`
-	Timestamp time.Time                `json:"timestamp"`
+	Task ReactToRetriablePollTask `json:"task"`
 }
 
 // ReactToWasmEventTask defines model for ReactToWasmEventTask.
@@ -593,10 +576,7 @@ type ReactToWasmEventTask struct {
 
 // ReactToWasmEventTaskItem defines model for ReactToWasmEventTaskItem.
 type ReactToWasmEventTaskItem struct {
-	Chain     string               `json:"chain"`
-	ID        TaskItemID           `json:"id"`
-	Task      ReactToWasmEventTask `json:"task"`
-	Timestamp time.Time            `json:"timestamp"`
+	Task ReactToWasmEventTask `json:"task"`
 }
 
 // RefundTask defines model for RefundTask.
@@ -608,13 +588,9 @@ type RefundTask struct {
 
 // RefundTaskItem defines model for RefundTaskItem.
 type RefundTaskItem struct {
-	Chain string     `json:"chain"`
-	ID    TaskItemID `json:"id"`
-
 	// Meta Metadata attached to REFUND and VERIFY tasks. It carries values passed in the associated CALL event (if any) back to the source chain.
-	Meta      *SourceChainTaskMetadata `json:"meta,omitempty"`
-	Task      RefundTask               `json:"task"`
-	Timestamp time.Time                `json:"timestamp"`
+	Meta *SourceChainTaskMetadata `json:"meta,omitempty"`
+	Task RefundTask               `json:"task"`
 }
 
 // SignersRotatedEvent defines model for SignersRotatedEvent.
@@ -648,6 +624,7 @@ type StorePayloadResult struct {
 type TaskEnvelope struct {
 	Chain     string     `json:"chain"`
 	ID        TaskItemID `json:"id"`
+	Task      TaskItem   `json:"task"`
 	Timestamp time.Time  `json:"timestamp"`
 }
 
@@ -684,13 +661,9 @@ type VerifyTask struct {
 
 // VerifyTaskItem defines model for VerifyTaskItem.
 type VerifyTaskItem struct {
-	Chain string     `json:"chain"`
-	ID    TaskItemID `json:"id"`
-
 	// Meta Metadata attached to REFUND and VERIFY tasks. It carries values passed in the associated CALL event (if any) back to the source chain.
-	Meta      *SourceChainTaskMetadata `json:"meta,omitempty"`
-	Task      VerifyTask               `json:"task"`
-	Timestamp time.Time                `json:"timestamp"`
+	Meta *SourceChainTaskMetadata `json:"meta,omitempty"`
+	Task VerifyTask               `json:"task"`
 }
 
 // WasmEvent defines model for WasmEvent.

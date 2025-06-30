@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
@@ -171,5 +172,78 @@ func TestGetFees(t *testing.T) {
 				assert.EqualValues(t, api.Fees{fee1, fee2, fee3}, fees)
 			})
 		}
+	})
+}
+
+func TestTaskEnvelopeHelpers(t *testing.T) {
+	fixedTime := time.Date(2024, 1, 1, 12, 0, 0, 0, time.UTC)
+	taskID := uuid.MustParse("123e4567-e89b-12d3-a456-426614174000")
+
+	t.Run("TaskEnvelope helper methods", func(t *testing.T) {
+		// Create a TaskItem with an ExecuteTaskItem
+		var taskItem api.TaskItem
+		executeTaskItem := api.ExecuteTaskItem{
+			Task: api.ExecuteTask{
+				AvailableGasBalance: api.Token{Amount: "1000"},
+				Message: api.Message{
+					MessageID:          "msg-123",
+					SourceChain:        "ethereum",
+					SourceAddress:      "0x123",
+					DestinationAddress: "0x456",
+					PayloadHash:        []byte("hash"),
+				},
+				Payload: []byte("payload"),
+			},
+		}
+
+		err := taskItem.FromExecuteTaskItem(executeTaskItem)
+		require.NoError(t, err)
+
+		taskEnvelope := api.TaskEnvelope{
+			Chain:     "ethereum",
+			ID:        taskID,
+			Task:      taskItem,
+			Timestamp: fixedTime,
+		}
+
+		// Test helper methods
+		require.Equal(t, taskID, taskEnvelope.GetTaskItemID())
+		require.Equal(t, "ethereum", taskEnvelope.GetChain())
+		require.Equal(t, fixedTime, taskEnvelope.GetTimestamp())
+		require.Equal(t, api.TaskTypeExecute, taskEnvelope.GetTaskType())
+	})
+
+	t.Run("TaskEnvelope with GatewayTransactionTaskItem", func(t *testing.T) {
+		// Create a TaskItem with a GatewayTransactionTaskItem
+		var taskItem api.TaskItem
+		gatewayTaskItem := api.GatewayTransactionTaskItem{
+			Task: api.GatewayTransactionTask{
+				ExecuteData: []byte("execute data"),
+			},
+			Meta: &api.DestinationChainTaskMetadata{
+				ScopedMessages: &[]api.CrossChainID{
+					{
+						MessageID:   "msg-123",
+						SourceChain: "ethereum",
+					},
+				},
+			},
+		}
+
+		err := taskItem.FromGatewayTransactionTaskItem(gatewayTaskItem)
+		require.NoError(t, err)
+
+		taskEnvelope := api.TaskEnvelope{
+			Chain:     "polygon",
+			ID:        taskID,
+			Task:      taskItem,
+			Timestamp: fixedTime,
+		}
+
+		// Test helper methods
+		require.Equal(t, taskID, taskEnvelope.GetTaskItemID())
+		require.Equal(t, "polygon", taskEnvelope.GetChain())
+		require.Equal(t, fixedTime, taskEnvelope.GetTimestamp())
+		require.Equal(t, api.TaskTypeGatewayTransaction, taskEnvelope.GetTaskType())
 	})
 }

@@ -3,6 +3,7 @@ package api
 import (
 	"errors"
 	"fmt"
+	"time"
 )
 
 // GeneralizedMessageExecutedEvent is a compatibility interface that generalizes MessageExecutedEvent and MessageExecutedEventV2.
@@ -48,4 +49,24 @@ func createFees[T eventWithCost](event T) (Fees, error) {
 		"failed to get fees: %w",
 		errors.Join(asTokenErr, asFeesErr),
 	)
+}
+
+// GetTaskItemID returns the TaskItemID from any TaskEnvelope
+func (t TaskEnvelope) GetTaskItemID() TaskItemID {
+	return t.ID
+}
+
+// GetChain returns the chain from any TaskEnvelope
+func (t TaskEnvelope) GetChain() string {
+	return t.Chain
+}
+
+// GetTimestamp returns the timestamp from any TaskEnvelope
+func (t TaskEnvelope) GetTimestamp() time.Time {
+	return t.Timestamp
+}
+
+// GetTaskType returns the task type from the TaskItem inside TaskEnvelope
+func (t TaskEnvelope) GetTaskType() TaskType {
+	return t.Task.Type
 }

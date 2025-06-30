@@ -1105,7 +1105,7 @@ components:
         tasks:
           type: array
           items:
-            $ref: '#/components/schemas/TaskItem'
+            $ref: '#/components/schemas/TaskEnvelope'
       required:
         - tasks
     TaskType:
@@ -1183,91 +1183,69 @@ components:
         timestamp:
           type: string
           format: date-time
+        task:
+          $ref: '#/components/schemas/TaskItem'
       required:
         - id
         - chain
         - timestamp
-        - type
         - task
-    TaskItemID:
-      type: string
-      minLength: 1
-      x-go-type: uuid.UUID
-      x-go-type-import:
-        path: github.com/google/uuid
-        name: uuid
     ConstructProofTaskItem:
-      allOf:
-        - $ref: '#/components/schemas/TaskEnvelope'
-        - properties:
-            task:
-              $ref: '#/components/schemas/ConstructProofTask'
-          required:
-            - task
+      properties:
+        task:
+          $ref: '#/components/schemas/ConstructProofTask'
+      required:
+        - task
     ExecuteTaskItem:
-      allOf:
-        - $ref: '#/components/schemas/TaskEnvelope'
-        - properties:
-            task:
-              $ref: '#/components/schemas/ExecuteTask'
-          required:
-            - task
+      properties:
+        task:
+          $ref: '#/components/schemas/ExecuteTask'
+      required:
+        - task
     GatewayTransactionTaskItem:
-      allOf:
-        - $ref: '#/components/schemas/TaskEnvelope'
-        - properties:
-            task:
-              $ref: '#/components/schemas/GatewayTransactionTask'
-            meta:
-              $ref: '#/components/schemas/DestinationChainTaskMetadata'
-          required:
-            - task
+      properties:
+        task:
+          $ref: '#/components/schemas/GatewayTransactionTask'
+        meta:
+          $ref: '#/components/schemas/DestinationChainTaskMetadata'
+      required:
+        - task
     ReactToWasmEventTaskItem:
-      allOf:
-        - $ref: '#/components/schemas/TaskEnvelope'
-        - properties:
-            task:
-              $ref: '#/components/schemas/ReactToWasmEventTask'
-          required:
-            - task
+      properties:
+        task:
+          $ref: '#/components/schemas/ReactToWasmEventTask'
+      required:
+        - task
     RefundTaskItem:
-      allOf:
-        - $ref: '#/components/schemas/TaskEnvelope'
-        - properties:
-            task:
-              $ref: '#/components/schemas/RefundTask'
-            meta:
-              $ref: '#/components/schemas/SourceChainTaskMetadata'
-          required:
-            - task
+      properties:
+        task:
+          $ref: '#/components/schemas/RefundTask'
+        meta:
+          $ref: '#/components/schemas/SourceChainTaskMetadata'
+      required:
+        - task
     ReactToExpiredSigningSessionTaskItem:
-      allOf:
-        - $ref: '#/components/schemas/TaskEnvelope'
-        - properties:
-            task:
-              $ref: '#/components/schemas/ReactToExpiredSigningSessionTask'
-            meta:
-              $ref: '#/components/schemas/DestinationChainTaskMetadata'
-          required:
-            - task
+      properties:
+        task:
+          $ref: '#/components/schemas/ReactToExpiredSigningSessionTask'
+        meta:
+          $ref: '#/components/schemas/DestinationChainTaskMetadata'
+      required:
+        - task
     ReactToRetriablePollTaskItem:
-      allOf:
-        - $ref: '#/components/schemas/TaskEnvelope'
-        - properties:
-            task:
-              $ref: '#/components/schemas/ReactToRetriablePollTask'
-          required:
-            - task
+      properties:
+        task:
+          $ref: '#/components/schemas/ReactToRetriablePollTask'
+      required:
+        - task
     VerifyTaskItem:
-      allOf:
-        - $ref: '#/components/schemas/TaskEnvelope'
-        - properties:
-            task:
-              $ref: '#/components/schemas/VerifyTask'
-            meta:
-              $ref: '#/components/schemas/SourceChainTaskMetadata'
-          required:
-            - task
+      properties:
+        task:
+          $ref: '#/components/schemas/VerifyTask'
+        meta:
+          $ref: '#/components/schemas/SourceChainTaskMetadata'
+      required:
+        - task
     ConstructProofTask:
       properties:
         message:
@@ -1544,5 +1522,12 @@ components:
         - $ref: '#/components/schemas/ReactToExpiredSigningSessionTask'
         - $ref: '#/components/schemas/ReactToRetriablePollTask'
         - $ref: '#/components/schemas/VerifyTask'
+    TaskItemID:
+      type: string
+      minLength: 1
+      x-go-type: uuid.UUID
+      x-go-type-import:
+        path: github.com/google/uuid
+        name: uuid
 
 

@@ -3,10 +3,8 @@ package api_test
 import (
 	"encoding/json"
 	"testing"
-	"time"
 
 	"github.com/axelarnetwork/amplifier-relayer-api/v2/api"
-	"github.com/google/uuid"
 )
 
 func TestTaskItemDiscriminatorValidation(t *testing.T) {
@@ -22,7 +20,6 @@ func TestTaskItemDiscriminatorValidation(t *testing.T) {
 			setupTaskItem: func() api.TaskItem {
 				var item api.TaskItem
 				_ = item.FromGatewayTransactionTaskItem(api.GatewayTransactionTaskItem{
-					Type: "GATEWAY_TX",
 					Task: api.GatewayTransactionTask{
 						ExecuteData: []byte("test data"),
 					},
@@ -40,7 +37,6 @@ func TestTaskItemDiscriminatorValidation(t *testing.T) {
 			setupTaskItem: func() api.TaskItem {
 				var item api.TaskItem
 				_ = item.FromExecuteTaskItem(api.ExecuteTaskItem{
-					Type: "EXECUTE",
 					Task: api.ExecuteTask{
 						AvailableGasBalance: api.Token{Amount: "1000", TokenID: nil},
 						Message: api.Message{
@@ -66,7 +62,6 @@ func TestTaskItemDiscriminatorValidation(t *testing.T) {
 			setupTaskItem: func() api.TaskItem {
 				var item api.TaskItem
 				_ = item.FromExecuteTaskItem(api.ExecuteTaskItem{
-					Type: "EXECUTE",
 					Task: api.ExecuteTask{
 						AvailableGasBalance: api.Token{Amount: "1000", TokenID: nil},
 						Message: api.Message{
@@ -92,7 +87,6 @@ func TestTaskItemDiscriminatorValidation(t *testing.T) {
 			setupTaskItem: func() api.TaskItem {
 				var item api.TaskItem
 				_ = item.FromGatewayTransactionTaskItem(api.GatewayTransactionTaskItem{
-					Type: "GATEWAY_TX",
 					Task: api.GatewayTransactionTask{
 						ExecuteData: []byte("test data"),
 					},
@@ -307,7 +301,6 @@ func TestTaskItemValueByDiscriminator(t *testing.T) {
 			setupTask: func() api.TaskItem {
 				var item api.TaskItem
 				_ = item.FromGatewayTransactionTaskItem(api.GatewayTransactionTaskItem{
-					Type: "GATEWAY_TX",
 					Task: api.GatewayTransactionTask{
 						ExecuteData: []byte("test data"),
 					},
@@ -322,7 +315,6 @@ func TestTaskItemValueByDiscriminator(t *testing.T) {
 			setupTask: func() api.TaskItem {
 				var item api.TaskItem
 				_ = item.FromExecuteTaskItem(api.ExecuteTaskItem{
-					Type: "EXECUTE",
 					Task: api.ExecuteTask{
 						AvailableGasBalance: api.Token{Amount: "1000", TokenID: nil},
 						Message: api.Message{
@@ -368,7 +360,6 @@ func TestTaskItemMergeFunctionality(t *testing.T) {
 	t.Run("Merge GatewayTransactionTaskItem", func(t *testing.T) {
 		var item api.TaskItem
 		_ = item.FromGatewayTransactionTaskItem(api.GatewayTransactionTaskItem{
-			Type: "GATEWAY_TX",
 			Task: api.GatewayTransactionTask{
 				ExecuteData: []byte("initial data"),
 			},
@@ -376,7 +367,6 @@ func TestTaskItemMergeFunctionality(t *testing.T) {
 
 		// Now merge with new data
 		err := item.MergeGatewayTransactionTaskItem(api.GatewayTransactionTaskItem{
-			Type: "GATEWAY_TX",
 			Task: api.GatewayTransactionTask{
 				ExecuteData: []byte("merged data"),
 			},
@@ -399,7 +389,6 @@ func TestJSONMarshaling(t *testing.T) {
 	t.Run("TaskItem JSON marshaling", func(t *testing.T) {
 		var item api.TaskItem
 		_ = item.FromGatewayTransactionTaskItem(api.GatewayTransactionTaskItem{
-			Type: "GATEWAY_TX",
 			Task: api.GatewayTransactionTask{
 				ExecuteData: []byte("test data"),
 			},
@@ -504,10 +493,6 @@ func TestTaskItemJSONMarshalingCompatibility(t *testing.T) {
 			setupTaskItem: func() api.TaskItem {
 				var item api.TaskItem
 				_ = item.FromGatewayTransactionTaskItem(api.GatewayTransactionTaskItem{
-					Chain:     "ethereum",
-					ID:        uuid.MustParse("123e4567-e89b-12d3-a456-426614174000"),
-					Type:      "GATEWAY_TX",
-					Timestamp: time.Date(2024, 1, 1, 12, 0, 0, 0, time.UTC),
 					Task: api.GatewayTransactionTask{
 						ExecuteData: []byte("test execute data"),
 					},
@@ -522,7 +507,7 @@ func TestTaskItemJSONMarshalingCompatibility(t *testing.T) {
 				})
 				return item
 			},
-			expectedFields: []string{"type", "chain", "id", "timestamp", "task", "meta"},
+			expectedFields: []string{"type", "task", "meta"},
 			validateJSON: func(t *testing.T, jsonData []byte) {
 				var result map[string]interface{}
 				err := json.Unmarshal(jsonData, &result)
@@ -534,9 +519,6 @@ func TestTaskItemJSONMarshalingCompatibility(t *testing.T) {
 				// Verify required fields are present
 				if result["type"] != "GATEWAY_TX" {
 					t.Errorf("Expected type 'GATEWAY_TX', got %v", result["type"])
-				}
-				if result["chain"] != "ethereum" {
-					t.Errorf("Expected chain 'ethereum', got %v", result["chain"])
 				}
 
 				// Verify task structure
@@ -566,10 +548,6 @@ func TestTaskItemJSONMarshalingCompatibility(t *testing.T) {
 			setupTaskItem: func() api.TaskItem {
 				var item api.TaskItem
 				_ = item.FromExecuteTaskItem(api.ExecuteTaskItem{
-					Chain:     "ethereum",
-					ID:        uuid.MustParse("123e4567-e89b-12d3-a456-426614174001"),
-					Type:      "EXECUTE",
-					Timestamp: time.Date(2024, 1, 1, 12, 0, 0, 0, time.UTC),
 					Task: api.ExecuteTask{
 						AvailableGasBalance: api.Token{
 							Amount:  "1000000000000000000",
@@ -587,7 +565,7 @@ func TestTaskItemJSONMarshalingCompatibility(t *testing.T) {
 				})
 				return item
 			},
-			expectedFields: []string{"type", "chain", "id", "timestamp", "task"},
+			expectedFields: []string{"type", "task"},
 			validateJSON: func(t *testing.T, jsonData []byte) {
 				var result map[string]interface{}
 				err := json.Unmarshal(jsonData, &result)
@@ -641,10 +619,6 @@ func TestTaskItemJSONMarshalingCompatibility(t *testing.T) {
 			setupTaskItem: func() api.TaskItem {
 				var item api.TaskItem
 				_ = item.FromConstructProofTaskItem(api.ConstructProofTaskItem{
-					Chain:     "ethereum",
-					ID:        uuid.MustParse("123e4567-e89b-12d3-a456-426614174002"),
-					Type:      "CONSTRUCT_PROOF",
-					Timestamp: time.Date(2024, 1, 1, 12, 0, 0, 0, time.UTC),
 					Task: api.ConstructProofTask{
 						Message: api.Message{
 							MessageID:          "msg-789",
@@ -658,7 +632,7 @@ func TestTaskItemJSONMarshalingCompatibility(t *testing.T) {
 				})
 				return item
 			},
-			expectedFields: []string{"type", "chain", "id", "timestamp", "task"},
+			expectedFields: []string{"type", "task"},
 			validateJSON: func(t *testing.T, jsonData []byte) {
 				var result map[string]interface{}
 				err := json.Unmarshal(jsonData, &result)
@@ -699,10 +673,6 @@ func TestTaskItemJSONMarshalingCompatibility(t *testing.T) {
 			setupTaskItem: func() api.TaskItem {
 				var item api.TaskItem
 				_ = item.FromRefundTaskItem(api.RefundTaskItem{
-					Chain:     "ethereum",
-					ID:        uuid.MustParse("123e4567-e89b-12d3-a456-426614174003"),
-					Type:      "REFUND",
-					Timestamp: time.Date(2024, 1, 1, 12, 0, 0, 0, time.UTC),
 					Task: api.RefundTask{
 						Message: api.Message{
 							MessageID:          "msg-refund",
@@ -726,7 +696,7 @@ func TestTaskItemJSONMarshalingCompatibility(t *testing.T) {
 				})
 				return item
 			},
-			expectedFields: []string{"type", "chain", "id", "timestamp", "task", "meta"},
+			expectedFields: []string{"type", "task", "meta"},
 			validateJSON: func(t *testing.T, jsonData []byte) {
 				var result map[string]interface{}
 				err := json.Unmarshal(jsonData, &result)
@@ -782,10 +752,6 @@ func TestTaskItemJSONMarshalingCompatibility(t *testing.T) {
 			setupTaskItem: func() api.TaskItem {
 				var item api.TaskItem
 				_ = item.FromVerifyTaskItem(api.VerifyTaskItem{
-					Chain:     "ethereum",
-					ID:        uuid.MustParse("123e4567-e89b-12d3-a456-426614174004"),
-					Type:      "VERIFY",
-					Timestamp: time.Date(2024, 1, 1, 12, 0, 0, 0, time.UTC),
 					Task: api.VerifyTask{
 						DestinationChain: "polygon",
 						Message: api.Message{
@@ -805,7 +771,7 @@ func TestTaskItemJSONMarshalingCompatibility(t *testing.T) {
 				})
 				return item
 			},
-			expectedFields: []string{"type", "chain", "id", "timestamp", "task", "meta"},
+			expectedFields: []string{"type", "task", "meta"},
 			validateJSON: func(t *testing.T, jsonData []byte) {
 				var result map[string]interface{}
 				err := json.Unmarshal(jsonData, &result)
@@ -851,10 +817,6 @@ func TestTaskItemJSONMarshalingCompatibility(t *testing.T) {
 			setupTaskItem: func() api.TaskItem {
 				var item api.TaskItem
 				_ = item.FromReactToWasmEventTaskItem(api.ReactToWasmEventTaskItem{
-					Chain:     "ethereum",
-					ID:        uuid.MustParse("123e4567-e89b-12d3-a456-426614174005"),
-					Type:      "REACT_TO_WASM_EVENT",
-					Timestamp: time.Date(2024, 1, 1, 12, 0, 0, 0, time.UTC),
 					Task: api.ReactToWasmEventTask{
 						Event: api.WasmEvent{
 							Type: "wasm.event",
@@ -874,7 +836,7 @@ func TestTaskItemJSONMarshalingCompatibility(t *testing.T) {
 				})
 				return item
 			},
-			expectedFields: []string{"type", "chain", "id", "timestamp", "task"},
+			expectedFields: []string{"type", "task"},
 			validateJSON: func(t *testing.T, jsonData []byte) {
 				var result map[string]interface{}
 				err := json.Unmarshal(jsonData, &result)
@@ -1004,7 +966,6 @@ func TestTaskItemJSONMarshalingEdgeCases(t *testing.T) {
 	t.Run("TaskItem with minimal data JSON marshaling", func(t *testing.T) {
 		var item api.TaskItem
 		_ = item.FromGatewayTransactionTaskItem(api.GatewayTransactionTaskItem{
-			Type: "GATEWAY_TX",
 			Task: api.GatewayTransactionTask{
 				ExecuteData: []byte{},
 			},
@@ -1036,7 +997,6 @@ func TestTaskItemJSONMarshalingEdgeCases(t *testing.T) {
 	t.Run("TaskItem with nil optional fields JSON marshaling", func(t *testing.T) {
 		var item api.TaskItem
 		_ = item.FromGatewayTransactionTaskItem(api.GatewayTransactionTaskItem{
-			Type: "GATEWAY_TX",
 			Task: api.GatewayTransactionTask{
 				ExecuteData: []byte("test"),
 			},
