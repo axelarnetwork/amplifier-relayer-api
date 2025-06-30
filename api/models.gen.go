@@ -260,7 +260,6 @@ type ConstructProofTaskItem struct {
 	ID        TaskItemID         `json:"id"`
 	Task      ConstructProofTask `json:"task"`
 	Timestamp time.Time          `json:"timestamp"`
-	Type      TaskType           `json:"type"`
 }
 
 // ContractQueryResponse defines model for ContractQueryResponse.
@@ -325,7 +324,6 @@ type ExecuteTaskItem struct {
 	ID        TaskItemID  `json:"id"`
 	Task      ExecuteTask `json:"task"`
 	Timestamp time.Time   `json:"timestamp"`
-	Type      TaskType    `json:"type"`
 }
 
 // Fee defines model for Fee.
@@ -378,7 +376,6 @@ type GatewayTransactionTaskItem struct {
 	Meta      *DestinationChainTaskMetadata `json:"meta,omitempty"`
 	Task      GatewayTransactionTask        `json:"task"`
 	Timestamp time.Time                     `json:"timestamp"`
-	Type      TaskType                      `json:"type"`
 }
 
 // GetTasksResult defines model for GetTasksResult.
@@ -569,7 +566,6 @@ type ReactToExpiredSigningSessionTaskItem struct {
 	Meta      *DestinationChainTaskMetadata    `json:"meta,omitempty"`
 	Task      ReactToExpiredSigningSessionTask `json:"task"`
 	Timestamp time.Time                        `json:"timestamp"`
-	Type      TaskType                         `json:"type"`
 }
 
 // ReactToRetriablePollTask defines model for ReactToRetriablePollTask.
@@ -587,7 +583,6 @@ type ReactToRetriablePollTaskItem struct {
 	ID        TaskItemID               `json:"id"`
 	Task      ReactToRetriablePollTask `json:"task"`
 	Timestamp time.Time                `json:"timestamp"`
-	Type      TaskType                 `json:"type"`
 }
 
 // ReactToWasmEventTask defines model for ReactToWasmEventTask.
@@ -602,7 +597,6 @@ type ReactToWasmEventTaskItem struct {
 	ID        TaskItemID           `json:"id"`
 	Task      ReactToWasmEventTask `json:"task"`
 	Timestamp time.Time            `json:"timestamp"`
-	Type      TaskType             `json:"type"`
 }
 
 // RefundTask defines model for RefundTask.
@@ -621,7 +615,6 @@ type RefundTaskItem struct {
 	Meta      *SourceChainTaskMetadata `json:"meta,omitempty"`
 	Task      RefundTask               `json:"task"`
 	Timestamp time.Time                `json:"timestamp"`
-	Type      TaskType                 `json:"type"`
 }
 
 // SignersRotatedEvent defines model for SignersRotatedEvent.
@@ -656,7 +649,6 @@ type TaskEnvelope struct {
 	Chain     string     `json:"chain"`
 	ID        TaskItemID `json:"id"`
 	Timestamp time.Time  `json:"timestamp"`
-	Type      TaskType   `json:"type"`
 }
 
 // TaskItem defines model for TaskItem.
@@ -699,7 +691,6 @@ type VerifyTaskItem struct {
 	Meta      *SourceChainTaskMetadata `json:"meta,omitempty"`
 	Task      VerifyTask               `json:"task"`
 	Timestamp time.Time                `json:"timestamp"`
-	Type      TaskType                 `json:"type"`
 }
 
 // WasmEvent defines model for WasmEvent.
