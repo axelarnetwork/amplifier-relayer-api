@@ -97,6 +97,9 @@ type ClientInterface interface {
 	// GetTasks request
 	GetTasks(ctx context.Context, chain Chain, params *GetTasksParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// GetTask request
+	GetTask(ctx context.Context, chain Chain, taskItemID TaskItemID, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// BroadcastMsgExecuteContractWithBody request with any body
 	BroadcastMsgExecuteContractWithBody(ctx context.Context, wasmContractAddress WasmContractAddress, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -146,6 +149,18 @@ func (c *Client) PublishEvents(ctx context.Context, chain Chain, body PublishEve
 
 func (c *Client) GetTasks(ctx context.Context, chain Chain, params *GetTasksParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetTasksRequest(c.Server, chain, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) GetTask(ctx context.Context, chain Chain, taskItemID TaskItemID, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetTaskRequest(c.Server, chain, taskItemID)
 	if err != nil {
 		return nil, err
 	}
@@ -361,6 +376,47 @@ func NewGetTasksRequest(server string, chain Chain, params *GetTasksParams) (*ht
 		}
 
 		queryURL.RawQuery = queryValues.Encode()
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetTaskRequest generates requests for GetTask
+func NewGetTaskRequest(server string, chain Chain, taskItemID TaskItemID) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "chain", runtime.ParamLocationPath, chain)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "taskItemID", runtime.ParamLocationPath, taskItemID)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/chains/%s/tasks/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
 	}
 
 	req, err := http.NewRequest("GET", queryURL.String(), nil)
@@ -647,6 +703,9 @@ type ClientWithResponsesInterface interface {
 	// GetTasksWithResponse request
 	GetTasksWithResponse(ctx context.Context, chain Chain, params *GetTasksParams, reqEditors ...RequestEditorFn) (*GetTasksResponse, error)
 
+	// GetTaskWithResponse request
+	GetTaskWithResponse(ctx context.Context, chain Chain, taskItemID TaskItemID, reqEditors ...RequestEditorFn) (*GetTaskResponse, error)
+
 	// BroadcastMsgExecuteContractWithBodyWithResponse request with any body
 	BroadcastMsgExecuteContractWithBodyWithResponse(ctx context.Context, wasmContractAddress WasmContractAddress, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*BroadcastMsgExecuteContractResponse, error)
 
@@ -713,6 +772,30 @@ func (r GetTasksResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r GetTasksResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetTaskResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *GetTaskResult
+	JSON404      *ErrorResponse
+	JSON500      *ErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r GetTaskResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetTaskResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -886,6 +969,15 @@ func (c *ClientWithResponses) GetTasksWithResponse(ctx context.Context, chain Ch
 	return ParseGetTasksResponse(rsp)
 }
 
+// GetTaskWithResponse request returning *GetTaskResponse
+func (c *ClientWithResponses) GetTaskWithResponse(ctx context.Context, chain Chain, taskItemID TaskItemID, reqEditors ...RequestEditorFn) (*GetTaskResponse, error) {
+	rsp, err := c.GetTask(ctx, chain, taskItemID, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetTaskResponse(rsp)
+}
+
 // BroadcastMsgExecuteContractWithBodyWithResponse request with arbitrary body returning *BroadcastMsgExecuteContractResponse
 func (c *ClientWithResponses) BroadcastMsgExecuteContractWithBodyWithResponse(ctx context.Context, wasmContractAddress WasmContractAddress, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*BroadcastMsgExecuteContractResponse, error) {
 	rsp, err := c.BroadcastMsgExecuteContractWithBody(ctx, wasmContractAddress, contentType, body, reqEditors...)
@@ -1019,6 +1111,46 @@ func ParseGetTasksResponse(rsp *http.Response) (*GetTasksResponse, error) {
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
 		var dest GetTasksResult
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetTaskResponse parses an HTTP response from a GetTaskWithResponse call
+func ParseGetTaskResponse(rsp *http.Response) (*GetTaskResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetTaskResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest GetTaskResult
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}

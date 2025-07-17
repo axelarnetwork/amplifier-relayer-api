@@ -169,6 +169,32 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+  /chains/{chain}/tasks/{taskItemID}:
+    get:
+      summary: Retrieve a transaction to be executed on-chain by id
+      operationId: getTask
+      parameters:
+        - $ref: '#/components/parameters/chain'
+        - $ref: '#/components/parameters/taskItemID'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetTaskResult'
+        '404':
+          description: Chain Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
   /payloads:
     post:
       summary: Temporarily store a large payload against its hash to bypass size restrictions on some chains.
@@ -272,6 +298,13 @@ components:
       required: true
       schema:
         $ref: '#/components/schemas/BroadcastID'
+      example: "deadbeef-dead-beef-dead-beefdeadbeef"
+    taskItemID:
+      name: taskItemID
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/TaskItemID'
       example: "deadbeef-dead-beef-dead-beefdeadbeef"
   schemas:
     PublishEventsRequest:
@@ -1131,6 +1164,13 @@ components:
             $ref: '#/components/schemas/TaskItem'
       required:
         - tasks
+    GetTaskResult:
+      type: object
+      properties:
+        task:
+          $ref: '#/components/schemas/TaskItem'
+      required:
+        - task
     TaskType:
       type: string
       enum:
