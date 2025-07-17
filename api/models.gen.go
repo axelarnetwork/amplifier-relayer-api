@@ -140,9 +140,6 @@ type AppInterchainTransferSentEvent struct {
 	TokenSpent                 InterchainTransferTokenWithAddress `json:"tokenSpent"`
 }
 
-// BigInt defines model for BigInt.
-type BigInt = string
-
 // BroadcastID defines model for BroadcastID.
 type BroadcastID = uuid.UUID
 
@@ -407,14 +404,14 @@ type InterchainTokenDefinition struct {
 
 // InterchainTransferTokenWithAddress defines model for InterchainTransferTokenWithAddress.
 type InterchainTransferTokenWithAddress struct {
-	Amount       BigInt  `json:"amount"`
-	TokenAddress Address `json:"tokenAddress"`
+	Amount       UnsignedBigInt `json:"amount"`
+	TokenAddress Address        `json:"tokenAddress"`
 }
 
 // InterchainTransferTokenWithID defines model for InterchainTransferTokenWithID.
 type InterchainTransferTokenWithID struct {
-	Amount  BigInt `json:"amount"`
-	TokenID string `json:"tokenID"`
+	Amount  UnsignedBigInt `json:"amount"`
+	TokenID string         `json:"tokenID"`
 }
 
 // Keccak256Hash defines model for Keccak256Hash.
@@ -613,10 +610,13 @@ type TaskType string
 // TokenManagerType defines model for TokenManagerType.
 type TokenManagerType string
 
+// UnsignedBigInt defines model for UnsignedBigInt.
+type UnsignedBigInt = string
+
 // UnsignedToken defines model for UnsignedToken.
 type UnsignedToken struct {
-	Amount  BigInt  `json:"amount"`
-	TokenID *string `json:"tokenID,omitempty"`
+	Amount  UnsignedBigInt `json:"amount"`
+	TokenID *string        `json:"tokenID,omitempty"`
 }
 
 // VerificationStatus defines model for VerificationStatus.
