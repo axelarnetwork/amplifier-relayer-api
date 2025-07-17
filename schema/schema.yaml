@@ -845,7 +845,7 @@ components:
               type: string
               minLength: 1
             tokenSpent:
-              $ref: '#/components/schemas/Token'
+              $ref: '#/components/schemas/InterchainTransferTokenWithID'
             sourceAddress:
               $ref: '#/components/schemas/Address'
             destinationAddress:
@@ -889,7 +889,7 @@ components:
               format: byte
               minLength: 1
             tokenSpent:
-              $ref: '#/components/schemas/InterchainTransferToken'
+              $ref: '#/components/schemas/InterchainTransferTokenWithAddress'
           required:
             - messageID
             - destinationChain
@@ -922,7 +922,7 @@ components:
             recipient:
               $ref: '#/components/schemas/Address'
             tokenReceived:
-              $ref: '#/components/schemas/InterchainTransferToken'
+              $ref: '#/components/schemas/InterchainTransferTokenWithAddress'
           required:
             - messageID
             - sourceChain
@@ -1015,7 +1015,7 @@ components:
           $ref: '#/components/schemas/BigInt'
       required:
         - amount
-    InterchainTransferToken:
+    InterchainTransferTokenWithAddress:
       type: object
       properties:
         tokenAddress:
@@ -1024,6 +1024,17 @@ components:
           $ref: '#/components/schemas/BigInt'
       required:
         - tokenAddress
+        - amount
+    InterchainTransferTokenWithID:
+      type: object
+      properties:
+        tokenID:
+          type: string
+          minLength: 1
+        amount:
+          $ref: '#/components/schemas/BigInt'
+      required:
+        - tokenID
         - amount
     InterchainTokenDefinition:
       type: object
