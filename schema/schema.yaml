@@ -1012,7 +1012,7 @@ components:
           x-omitempty: true
           minLength: 1
         amount:
-          $ref: '#/components/schemas/BigInt'
+          $ref: '#/components/schemas/UnsignedBigInt'
       required:
         - amount
     InterchainTransferTokenWithAddress:
@@ -1021,7 +1021,7 @@ components:
         tokenAddress:
           $ref: '#/components/schemas/Address'
         amount:
-          $ref: '#/components/schemas/BigInt'
+          $ref: '#/components/schemas/UnsignedBigInt'
       required:
         - tokenAddress
         - amount
@@ -1032,7 +1032,7 @@ components:
           type: string
           minLength: 1
         amount:
-          $ref: '#/components/schemas/BigInt'
+          $ref: '#/components/schemas/UnsignedBigInt'
       required:
         - tokenID
         - amount
@@ -1447,7 +1447,7 @@ components:
     Address:
       type: string
       minLength: 1
-    BigInt:
+    UnsignedBigInt:
       type: string
       pattern: '^(0|[1-9]\d*)$'
     Keccak256Hash:
