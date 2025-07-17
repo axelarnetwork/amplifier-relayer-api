@@ -12,7 +12,7 @@ import (
 )
 
 func TestCostFromToken(t *testing.T) {
-	token := api.Token{
+	token := api.UnsignedToken{
 		Amount: "123",
 	}
 
@@ -25,7 +25,7 @@ func TestCostFromToken(t *testing.T) {
 	})
 
 	t.Run("should unmarshal as token", func(t *testing.T) {
-		result, err := cost.AsToken()
+		result, err := cost.AsUnsignedToken()
 		assert.NoError(t, err)
 		assert.Equal(t, token, result)
 	})

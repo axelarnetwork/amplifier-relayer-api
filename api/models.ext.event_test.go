@@ -35,7 +35,7 @@ func TestEvent_Validate_WhenValid(t *testing.T) {
 	var validTokenCost, validFeesCost api.Cost
 
 	funcs.MustNoErr(
-		validTokenCost.FromToken(api.Token{
+		validTokenCost.FromUnsignedToken(api.UnsignedToken{
 			Amount: "123",
 		}),
 	)
@@ -44,13 +44,13 @@ func TestEvent_Validate_WhenValid(t *testing.T) {
 		validFeesCost.FromFees([]api.Fee{
 			{
 				ID: "fee1",
-				Token: api.Token{
+				Token: api.UnsignedToken{
 					Amount: "123",
 				},
 			},
 			{
 				ID: "fee2",
-				Token: api.Token{
+				Token: api.UnsignedToken{
 					Amount: "456",
 				},
 			},
@@ -139,13 +139,13 @@ func TestEvent_Validate_WhenInvalid(t *testing.T) {
 		invalidFeesCost.FromFees([]api.Fee{
 			{
 				ID: "same_fee",
-				Token: api.Token{
+				Token: api.UnsignedToken{
 					Amount: "123",
 				},
 			},
 			{
 				ID: "same_fee",
-				Token: api.Token{
+				Token: api.UnsignedToken{
 					Amount: "456",
 				},
 			},

@@ -506,7 +506,7 @@ components:
             refundAddress:
               $ref: '#/components/schemas/Address'
             payment:
-              $ref: '#/components/schemas/Token'
+              $ref: '#/components/schemas/UnsignedToken'
           required:
             - messageID
             - refundAddress
@@ -522,7 +522,7 @@ components:
             recipientAddress:
               $ref: '#/components/schemas/Address'
             refundedAmount:
-              $ref: '#/components/schemas/Token'
+              $ref: '#/components/schemas/UnsignedToken'
             cost:
               $ref: '#/components/schemas/Cost'
           required:
@@ -550,7 +550,7 @@ components:
               type: string
               format: byte
             withToken:
-                $ref: '#/components/schemas/Token'
+                $ref: '#/components/schemas/UnsignedToken'
           required:
             - message
             - destinationChain
@@ -973,7 +973,7 @@ components:
         - messageID
     Cost:
       anyOf:
-        - $ref: '#/components/schemas/Token'
+        - $ref: '#/components/schemas/UnsignedToken'
         - $ref: '#/components/schemas/Fees'
     FeeMetadata:
       type: object
@@ -995,7 +995,7 @@ components:
         description:
           type: string
         token:
-          $ref: '#/components/schemas/Token'
+          $ref: '#/components/schemas/UnsignedToken'
       required:
         - id
         - token
@@ -1003,7 +1003,7 @@ components:
       type: array
       items:
         $ref: '#/components/schemas/Fee'
-    Token:
+    UnsignedToken:
       type: object
       properties:
         tokenID:
@@ -1221,7 +1221,7 @@ components:
           format: byte
           minLength: 1
         availableGasBalance:
-          $ref: "#/components/schemas/Token"
+          $ref: "#/components/schemas/UnsignedToken"
       required:
         - message
         - payload
@@ -1252,7 +1252,7 @@ components:
         refundRecipientAddress:
           $ref: '#/components/schemas/Address'
         remainingGasBalance:
-          $ref: "#/components/schemas/Token"
+          $ref: "#/components/schemas/UnsignedToken"
       required:
         - message
         - refundRecipientAddress

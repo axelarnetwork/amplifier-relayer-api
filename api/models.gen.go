@@ -171,7 +171,7 @@ type CallEvent struct {
 	Message          Message            `json:"message"`
 	Meta             *CallEventMetadata `json:"meta,omitempty"`
 	Payload          []byte             `json:"payload"`
-	WithToken        *Token             `json:"withToken,omitempty"`
+	WithToken        *UnsignedToken     `json:"withToken,omitempty"`
 }
 
 // CallEventMetadata defines model for CallEventMetadata.
@@ -305,17 +305,17 @@ type EventType string
 
 // ExecuteTask defines model for ExecuteTask.
 type ExecuteTask struct {
-	AvailableGasBalance Token   `json:"availableGasBalance"`
-	Message             Message `json:"message"`
-	Payload             []byte  `json:"payload"`
+	AvailableGasBalance UnsignedToken `json:"availableGasBalance"`
+	Message             Message       `json:"message"`
+	Payload             []byte        `json:"payload"`
 }
 
 // Fee defines model for Fee.
 type Fee struct {
-	Description *string      `json:"description,omitempty"`
-	ID          string       `json:"id"`
-	Meta        *FeeMetadata `json:"meta,omitempty"`
-	Token       Token        `json:"token"`
+	Description *string       `json:"description,omitempty"`
+	ID          string        `json:"id"`
+	Meta        *FeeMetadata  `json:"meta,omitempty"`
+	Token       UnsignedToken `json:"token"`
 }
 
 // FeeMetadata defines model for FeeMetadata.
@@ -331,7 +331,7 @@ type GasCreditEvent struct {
 	EventID       string         `json:"eventID"`
 	MessageID     string         `json:"messageID"`
 	Meta          *EventMetadata `json:"meta,omitempty"`
-	Payment       Token          `json:"payment"`
+	Payment       UnsignedToken  `json:"payment"`
 	RefundAddress Address        `json:"refundAddress"`
 }
 
@@ -342,7 +342,7 @@ type GasRefundedEvent struct {
 	MessageID        string         `json:"messageID"`
 	Meta             *EventMetadata `json:"meta,omitempty"`
 	RecipientAddress Address        `json:"recipientAddress"`
-	RefundedAmount   Token          `json:"refundedAmount"`
+	RefundedAmount   UnsignedToken  `json:"refundedAmount"`
 }
 
 // GatewayTransactionTask defines model for GatewayTransactionTask.
@@ -551,9 +551,9 @@ type ReactToWasmEventTask struct {
 
 // RefundTask defines model for RefundTask.
 type RefundTask struct {
-	Message                Message `json:"message"`
-	RefundRecipientAddress Address `json:"refundRecipientAddress"`
-	RemainingGasBalance    Token   `json:"remainingGasBalance"`
+	Message                Message       `json:"message"`
+	RefundRecipientAddress Address       `json:"refundRecipientAddress"`
+	RemainingGasBalance    UnsignedToken `json:"remainingGasBalance"`
 }
 
 // SignersRotatedEvent defines model for SignersRotatedEvent.
@@ -610,14 +610,14 @@ type TaskMetadata struct {
 // TaskType defines model for TaskType.
 type TaskType string
 
-// Token defines model for Token.
-type Token struct {
+// TokenManagerType defines model for TokenManagerType.
+type TokenManagerType string
+
+// UnsignedToken defines model for UnsignedToken.
+type UnsignedToken struct {
 	Amount  BigInt  `json:"amount"`
 	TokenID *string `json:"tokenID,omitempty"`
 }
-
-// TokenManagerType defines model for TokenManagerType.
-type TokenManagerType string
 
 // VerificationStatus defines model for VerificationStatus.
 type VerificationStatus string
@@ -679,22 +679,22 @@ type BroadcastMsgExecuteContractJSONRequestBody = WasmRequest
 // QueryContractStateJSONRequestBody defines body for QueryContractState for application/json ContentType.
 type QueryContractStateJSONRequestBody = WasmRequest
 
-// AsToken returns the union data inside the Cost as a Token
-func (t Cost) AsToken() (Token, error) {
-	var body Token
+// AsUnsignedToken returns the union data inside the Cost as a UnsignedToken
+func (t Cost) AsUnsignedToken() (UnsignedToken, error) {
+	var body UnsignedToken
 	err := json.Unmarshal(t.union, &body)
 	return body, err
 }
 
-// FromToken overwrites any union data inside the Cost as the provided Token
-func (t *Cost) FromToken(v Token) error {
+// FromUnsignedToken overwrites any union data inside the Cost as the provided UnsignedToken
+func (t *Cost) FromUnsignedToken(v UnsignedToken) error {
 	b, err := json.Marshal(v)
 	t.union = b
 	return err
 }
 
-// MergeToken performs a merge with any union data inside the Cost, using the provided Token
-func (t *Cost) MergeToken(v Token) error {
+// MergeUnsignedToken performs a merge with any union data inside the Cost, using the provided UnsignedToken
+func (t *Cost) MergeUnsignedToken(v UnsignedToken) error {
 	b, err := json.Marshal(v)
 	if err != nil {
 		return err
