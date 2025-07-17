@@ -6,9 +6,9 @@ import (
 )
 
 // CostFromToken creates a Cost from a given Token
-func CostFromToken(token Token) Cost {
+func CostFromToken(token UnsignedToken) Cost {
 	var cost Cost
-	if err := cost.FromToken(token); err != nil {
+	if err := cost.FromUnsignedToken(token); err != nil {
 		panic(fmt.Errorf("failed to create cost from token: %w", err))
 	}
 
@@ -19,7 +19,7 @@ func CostFromToken(token Token) Cost {
 //
 //goland:noinspection GoMixedReceiverTypes
 func (f *Cost) Validate() error {
-	_, asTokenErr := f.AsToken()
+	_, asTokenErr := f.AsUnsignedToken()
 	if asTokenErr == nil {
 		return nil
 	}

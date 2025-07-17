@@ -23,7 +23,7 @@ type eventWithCost interface {
 func createFees[T eventWithCost](event T) (Fees, error) {
 	cost := event.getCost()
 
-	token, asTokenErr := cost.AsToken()
+	token, asTokenErr := cost.AsUnsignedToken()
 	if asTokenErr == nil {
 		fee := Fee{
 			Token: token,

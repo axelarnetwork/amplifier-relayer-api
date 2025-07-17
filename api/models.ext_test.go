@@ -66,7 +66,7 @@ func TestGetFees(t *testing.T) {
 			eventID = uuid.NewString()
 		)
 		funcs.MustNoErr(
-			cost.FromToken(api.Token{
+			cost.FromUnsignedToken(api.UnsignedToken{
 				Amount: "123",
 			}),
 		)
@@ -102,7 +102,7 @@ func TestGetFees(t *testing.T) {
 				require.NoError(t, err)
 				require.Len(t, fees, 1)
 				assert.EqualValues(t, api.Fee{
-					Token: api.Token{
+					Token: api.UnsignedToken{
 						Amount: "123",
 					},
 					ID: eventID,
@@ -114,7 +114,7 @@ func TestGetFees(t *testing.T) {
 	t.Run("when Cost is Fees", func(t *testing.T) {
 		description1 := uuid.NewString()
 		fee1 := api.Fee{
-			Token: api.Token{
+			Token: api.UnsignedToken{
 				Amount: "123",
 			},
 			ID:          uuid.NewString(),
@@ -123,7 +123,7 @@ func TestGetFees(t *testing.T) {
 
 		txID2 := uuid.NewString()
 		fee2 := api.Fee{
-			Token: api.Token{
+			Token: api.UnsignedToken{
 				Amount: "456",
 			},
 			ID: uuid.NewString(),
@@ -132,7 +132,7 @@ func TestGetFees(t *testing.T) {
 			},
 		}
 		fee3 := api.Fee{
-			Token: api.Token{
+			Token: api.UnsignedToken{
 				Amount: "789",
 			},
 			ID: uuid.NewString(),
