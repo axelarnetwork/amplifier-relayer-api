@@ -1003,6 +1003,18 @@ components:
       type: array
       items:
         $ref: '#/components/schemas/Fee'
+    Token:
+      type: object
+      properties:
+        tokenID:
+          type: string
+          nullable: true
+          x-omitempty: true
+          minLength: 1
+        amount:
+          $ref: '#/components/schemas/BigInt'
+      required:
+        - amount
     UnsignedToken:
       type: object
       properties:
@@ -1221,7 +1233,7 @@ components:
           format: byte
           minLength: 1
         availableGasBalance:
-          $ref: "#/components/schemas/UnsignedToken"
+          $ref: "#/components/schemas/Token"
       required:
         - message
         - payload
@@ -1447,6 +1459,9 @@ components:
     Address:
       type: string
       minLength: 1
+    BigInt:
+      type: string
+      pattern: '^(0|-?[1-9]\d*)$'
     UnsignedBigInt:
       type: string
       pattern: '^(0|[1-9]\d*)$'
