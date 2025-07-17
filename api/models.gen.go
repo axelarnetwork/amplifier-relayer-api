@@ -118,26 +118,26 @@ type AppEventMetadata struct {
 
 // AppInterchainTransferReceivedEvent defines model for AppInterchainTransferReceivedEvent.
 type AppInterchainTransferReceivedEvent struct {
-	EventID       string                  `json:"eventID"`
-	MessageID     string                  `json:"messageID"`
-	Meta          *AppEventMetadata       `json:"meta,omitempty"`
-	Recipient     Address                 `json:"recipient"`
-	Sender        []byte                  `json:"sender"`
-	SourceAddress Address                 `json:"sourceAddress"`
-	SourceChain   string                  `json:"sourceChain"`
-	TokenReceived InterchainTransferToken `json:"tokenReceived"`
+	EventID       string                             `json:"eventID"`
+	MessageID     string                             `json:"messageID"`
+	Meta          *AppEventMetadata                  `json:"meta,omitempty"`
+	Recipient     Address                            `json:"recipient"`
+	Sender        []byte                             `json:"sender"`
+	SourceAddress Address                            `json:"sourceAddress"`
+	SourceChain   string                             `json:"sourceChain"`
+	TokenReceived InterchainTransferTokenWithAddress `json:"tokenReceived"`
 }
 
 // AppInterchainTransferSentEvent defines model for AppInterchainTransferSentEvent.
 type AppInterchainTransferSentEvent struct {
-	DestinationChain           string                  `json:"destinationChain"`
-	DestinationContractAddress Address                 `json:"destinationContractAddress"`
-	EventID                    string                  `json:"eventID"`
-	MessageID                  string                  `json:"messageID"`
-	Meta                       *AppEventMetadata       `json:"meta,omitempty"`
-	Recipient                  []byte                  `json:"recipient"`
-	Sender                     Address                 `json:"sender"`
-	TokenSpent                 InterchainTransferToken `json:"tokenSpent"`
+	DestinationChain           string                             `json:"destinationChain"`
+	DestinationContractAddress Address                            `json:"destinationContractAddress"`
+	EventID                    string                             `json:"eventID"`
+	MessageID                  string                             `json:"messageID"`
+	Meta                       *AppEventMetadata                  `json:"meta,omitempty"`
+	Recipient                  []byte                             `json:"recipient"`
+	Sender                     Address                            `json:"sender"`
+	TokenSpent                 InterchainTransferTokenWithAddress `json:"tokenSpent"`
 }
 
 // BigInt defines model for BigInt.
@@ -366,14 +366,14 @@ type ITSInterchainTokenDeploymentStartedEvent struct {
 
 // ITSInterchainTransferEvent defines model for ITSInterchainTransferEvent.
 type ITSInterchainTransferEvent struct {
-	DataHash           []byte         `json:"dataHash"`
-	DestinationAddress []byte         `json:"destinationAddress"`
-	DestinationChain   string         `json:"destinationChain"`
-	EventID            string         `json:"eventID"`
-	MessageID          string         `json:"messageID"`
-	Meta               *EventMetadata `json:"meta,omitempty"`
-	SourceAddress      Address        `json:"sourceAddress"`
-	TokenSpent         Token          `json:"tokenSpent"`
+	DataHash           []byte                        `json:"dataHash"`
+	DestinationAddress []byte                        `json:"destinationAddress"`
+	DestinationChain   string                        `json:"destinationChain"`
+	EventID            string                        `json:"eventID"`
+	MessageID          string                        `json:"messageID"`
+	Meta               *EventMetadata                `json:"meta,omitempty"`
+	SourceAddress      Address                       `json:"sourceAddress"`
+	TokenSpent         InterchainTransferTokenWithID `json:"tokenSpent"`
 }
 
 // ITSLinkTokenStartedEvent defines model for ITSLinkTokenStartedEvent.
@@ -405,10 +405,16 @@ type InterchainTokenDefinition struct {
 	Symbol   string `json:"symbol"`
 }
 
-// InterchainTransferToken defines model for InterchainTransferToken.
-type InterchainTransferToken struct {
+// InterchainTransferTokenWithAddress defines model for InterchainTransferTokenWithAddress.
+type InterchainTransferTokenWithAddress struct {
 	Amount       BigInt  `json:"amount"`
 	TokenAddress Address `json:"tokenAddress"`
+}
+
+// InterchainTransferTokenWithID defines model for InterchainTransferTokenWithID.
+type InterchainTransferTokenWithID struct {
+	Amount  BigInt `json:"amount"`
+	TokenID string `json:"tokenID"`
 }
 
 // Keccak256Hash defines model for Keccak256Hash.
