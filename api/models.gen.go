@@ -140,6 +140,9 @@ type AppInterchainTransferSentEvent struct {
 	TokenSpent                 InterchainTransferTokenWithAddress `json:"tokenSpent"`
 }
 
+// BigInt defines model for BigInt.
+type BigInt = string
+
 // BroadcastID defines model for BroadcastID.
 type BroadcastID = uuid.UUID
 
@@ -302,9 +305,9 @@ type EventType string
 
 // ExecuteTask defines model for ExecuteTask.
 type ExecuteTask struct {
-	AvailableGasBalance UnsignedToken `json:"availableGasBalance"`
-	Message             Message       `json:"message"`
-	Payload             []byte        `json:"payload"`
+	AvailableGasBalance Token   `json:"availableGasBalance"`
+	Message             Message `json:"message"`
+	Payload             []byte  `json:"payload"`
 }
 
 // Fee defines model for Fee.
@@ -606,6 +609,12 @@ type TaskMetadata struct {
 
 // TaskType defines model for TaskType.
 type TaskType string
+
+// Token defines model for Token.
+type Token struct {
+	Amount  BigInt  `json:"amount"`
+	TokenID *string `json:"tokenID,omitempty"`
+}
 
 // TokenManagerType defines model for TokenManagerType.
 type TokenManagerType string
