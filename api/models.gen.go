@@ -350,6 +350,11 @@ type GatewayTransactionTask struct {
 	ExecuteData []byte `json:"executeData"`
 }
 
+// GetTaskResult defines model for GetTaskResult.
+type GetTaskResult struct {
+	Task TaskItem `json:"task"`
+}
+
 // GetTasksResult defines model for GetTasksResult.
 type GetTasksResult struct {
 	Tasks []TaskItem `json:"tasks"`

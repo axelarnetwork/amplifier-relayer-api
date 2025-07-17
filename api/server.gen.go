@@ -19,6 +19,9 @@ type ServerInterface interface {
 	// Poll transaction to be executed on chain
 	// (GET /chains/{chain}/tasks)
 	GetTasks(c *gin.Context, chain Chain, params GetTasksParams)
+	// Retrieve a transaction to be executed on-chain by id
+	// (GET /chains/{chain}/tasks/{taskItemID})
+	GetTask(c *gin.Context, chain Chain, taskItemID TaskItemID)
 	// Broadcast arbitrary MsgExecuteContract transaction
 	// (POST /contracts/{wasmContractAddress}/broadcasts)
 	BroadcastMsgExecuteContract(c *gin.Context, wasmContractAddress WasmContractAddress)
@@ -113,6 +116,39 @@ func (siw *ServerInterfaceWrapper) GetTasks(c *gin.Context) {
 	}
 
 	siw.Handler.GetTasks(c, chain, params)
+}
+
+// GetTask operation middleware
+func (siw *ServerInterfaceWrapper) GetTask(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "chain" -------------
+	var chain Chain
+
+	err = runtime.BindStyledParameterWithOptions("simple", "chain", c.Param("chain"), &chain, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter chain: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Path parameter "taskItemID" -------------
+	var taskItemID TaskItemID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "taskItemID", c.Param("taskItemID"), &taskItemID, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter taskItemID: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.GetTask(c, chain, taskItemID)
 }
 
 // BroadcastMsgExecuteContract operation middleware
@@ -275,6 +311,7 @@ func RegisterHandlersWithOptions(router gin.IRouter, si ServerInterface, options
 
 	router.POST(options.BaseURL+"/chains/:chain/events", wrapper.PublishEvents)
 	router.GET(options.BaseURL+"/chains/:chain/tasks", wrapper.GetTasks)
+	router.GET(options.BaseURL+"/chains/:chain/tasks/:taskItemID", wrapper.GetTask)
 	router.POST(options.BaseURL+"/contracts/:wasmContractAddress/broadcasts", wrapper.BroadcastMsgExecuteContract)
 	router.GET(options.BaseURL+"/contracts/:wasmContractAddress/broadcasts/:broadcastID", wrapper.GetMsgExecuteContractBroadcastStatus)
 	router.POST(options.BaseURL+"/contracts/:wasmContractAddress/queries", wrapper.QueryContractState)
