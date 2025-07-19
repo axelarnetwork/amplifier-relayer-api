@@ -14,6 +14,12 @@ type GeneralizedMessageExecutedEvent interface {
 	GetMeta() *MessageExecutedEventMetadata
 }
 
+// GeneralizableToken is a compatibility interface that generalizes Token and UnsignedToken.
+type GeneralizableToken interface {
+	GetTokenID() *string
+	GetAmount() string
+}
+
 type eventWithCost interface {
 	getTxID() *string
 	getEventID() string
