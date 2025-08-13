@@ -1044,6 +1044,8 @@ components:
           nullable: true
           x-omitempty: true
           minLength: 1
+        tokenType:
+          $ref: '#/components/schemas/TokenType'
         amount:
           $ref: '#/components/schemas/BigInt'
       required:
@@ -1056,10 +1058,27 @@ components:
           nullable: true
           x-omitempty: true
           minLength: 1
+        tokenType:
+          $ref: '#/components/schemas/TokenType'
         amount:
           $ref: '#/components/schemas/UnsignedBigInt'
       required:
         - amount
+    TokenType:
+      type: string
+      description: ""
+      enum:
+        - NATIVE
+        - ASSET
+        - ITS
+      x-enum-varnames:
+        - TokenTypeNative
+        - TokenTypeAsset
+        - TokenTypeITS
+      x-enum-descriptions:
+        - "Native blockchain token (e.g., ETH on Ethereum)"
+        - "Custom token deployed on the blockchain and registered on axelarnet"
+        - "Any Interchain Token Service token. NOTE: these are not a supported form of payment at this time."
     InterchainTransferTokenWithAddress:
       type: object
       properties:

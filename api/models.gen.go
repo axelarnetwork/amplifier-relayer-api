@@ -94,6 +94,13 @@ const (
 	TokenManagerNativeInterchainToken TokenManagerType = "NATIVE_INTERCHAIN_TOKEN"
 )
 
+// Defines values for TokenType.
+const (
+	TokenTypeAsset  TokenType = "ASSET"
+	TokenTypeITS    TokenType = "ITS"
+	TokenTypeNative TokenType = "NATIVE"
+)
+
 // Defines values for VerificationStatus.
 const (
 	VerificationStatusFailedOnSourceChain    VerificationStatus = "FAILED_ON_SOURCE_CHAIN"
@@ -624,13 +631,17 @@ type Token struct {
 // TokenManagerType defines model for TokenManagerType.
 type TokenManagerType string
 
+// TokenType defines model for TokenType.
+type TokenType string
+
 // UnsignedBigInt defines model for UnsignedBigInt.
 type UnsignedBigInt = string
 
 // UnsignedToken defines model for UnsignedToken.
 type UnsignedToken struct {
-	Amount  UnsignedBigInt `json:"amount"`
-	TokenID *string        `json:"tokenID,omitempty"`
+	Amount    UnsignedBigInt `json:"amount"`
+	TokenID   *string        `json:"tokenID,omitempty"`
+	TokenType *TokenType     `json:"tokenType,omitempty"`
 }
 
 // VerificationStatus defines model for VerificationStatus.
