@@ -605,6 +605,8 @@ components:
             # TODO: should only be >0 if spent by integration's relayer
             cost:
               $ref: '#/components/schemas/Cost'
+            withMint:
+              $ref: '#/components/schemas/UnsignedToken'
           required:
             - message
             - cost
@@ -1274,6 +1276,8 @@ components:
           minLength: 1
         availableGasBalance:
           $ref: "#/components/schemas/Token"
+        withMint:
+          $ref: '#/components/schemas/UnsignedToken'
       required:
         - message
         - payload
