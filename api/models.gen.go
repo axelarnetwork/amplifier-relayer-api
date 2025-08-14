@@ -166,12 +166,12 @@ type BroadcastStatusResponse struct {
 
 // CallEvent defines model for CallEvent.
 type CallEvent struct {
-	DestinationChain string             `json:"destinationChain"`
-	EventID          string             `json:"eventID"`
-	Message          Message            `json:"message"`
-	Meta             *CallEventMetadata `json:"meta,omitempty"`
-	Payload          []byte             `json:"payload"`
-	WithToken        *WithToken         `json:"withToken,omitempty"`
+	DestinationChain string                            `json:"destinationChain"`
+	EventID          string                            `json:"eventID"`
+	Message          Message                           `json:"message"`
+	Meta             *CallEventMetadata                `json:"meta,omitempty"`
+	Payload          []byte                            `json:"payload"`
+	WithToken        *UnsignedTokenWithRequiredTokenID `json:"withToken,omitempty"`
 }
 
 // CallEventMetadata defines model for CallEventMetadata.
@@ -633,6 +633,12 @@ type UnsignedToken struct {
 	TokenID *string        `json:"tokenID,omitempty"`
 }
 
+// UnsignedTokenWithRequiredTokenID defines model for UnsignedTokenWithRequiredTokenID.
+type UnsignedTokenWithRequiredTokenID struct {
+	Amount  UnsignedBigInt `json:"amount"`
+	TokenID string         `json:"tokenID"`
+}
+
 // VerificationStatus defines model for VerificationStatus.
 type VerificationStatus string
 
@@ -665,12 +671,6 @@ type WasmRequestWithObjectBody map[string]interface{}
 
 // WasmRequestWithStringBody defines model for WasmRequestWithStringBody.
 type WasmRequestWithStringBody = string
-
-// WithToken defines model for WithToken.
-type WithToken struct {
-	Amount  BigInt `json:"amount"`
-	TokenID string `json:"tokenID,omitempty"`
-}
 
 // After defines model for after.
 type After = uuid.UUID
