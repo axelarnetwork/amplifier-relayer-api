@@ -166,12 +166,12 @@ type BroadcastStatusResponse struct {
 
 // CallEvent defines model for CallEvent.
 type CallEvent struct {
-	DestinationChain string             `json:"destinationChain"`
-	EventID          string             `json:"eventID"`
-	Message          Message            `json:"message"`
-	Meta             *CallEventMetadata `json:"meta,omitempty"`
-	Payload          []byte             `json:"payload"`
-	WithToken        *UnsignedToken     `json:"withToken,omitempty"`
+	DestinationChain string                       `json:"destinationChain"`
+	EventID          string                       `json:"eventID"`
+	Message          Message                      `json:"message"`
+	Meta             *CallEventMetadata           `json:"meta,omitempty"`
+	Payload          []byte                       `json:"payload"`
+	WithToken        *UnsignedTokenWithRequiredID `json:"withToken,omitempty"`
 }
 
 // CallEventMetadata defines model for CallEventMetadata.
@@ -631,6 +631,12 @@ type UnsignedBigInt = string
 type UnsignedToken struct {
 	Amount  UnsignedBigInt `json:"amount"`
 	TokenID *string        `json:"tokenID,omitempty"`
+}
+
+// UnsignedTokenWithRequiredID defines model for UnsignedTokenWithRequiredID.
+type UnsignedTokenWithRequiredID struct {
+	Amount  UnsignedBigInt `json:"amount"`
+	TokenID string         `json:"tokenID"`
 }
 
 // VerificationStatus defines model for VerificationStatus.
