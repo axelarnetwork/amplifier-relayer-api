@@ -305,9 +305,10 @@ type EventType string
 
 // ExecuteTask defines model for ExecuteTask.
 type ExecuteTask struct {
-	AvailableGasBalance Token   `json:"availableGasBalance"`
-	Message             Message `json:"message"`
-	Payload             []byte  `json:"payload"`
+	AvailableGasBalance Token          `json:"availableGasBalance"`
+	Message             Message        `json:"message"`
+	Payload             []byte         `json:"payload"`
+	WithMint            *UnsignedToken `json:"withMint,omitempty"`
 }
 
 // Fee defines model for Fee.
@@ -436,10 +437,11 @@ type Message struct {
 
 // MessageApprovedEvent defines model for MessageApprovedEvent.
 type MessageApprovedEvent struct {
-	Cost    Cost                          `json:"cost"`
-	EventID string                        `json:"eventID"`
-	Message Message                       `json:"message"`
-	Meta    *MessageApprovedEventMetadata `json:"meta,omitempty"`
+	Cost     Cost                          `json:"cost"`
+	EventID  string                        `json:"eventID"`
+	Message  Message                       `json:"message"`
+	Meta     *MessageApprovedEventMetadata `json:"meta,omitempty"`
+	WithMint *UnsignedToken                `json:"withMint,omitempty"`
 }
 
 // MessageApprovedEventMetadata defines model for MessageApprovedEventMetadata.
