@@ -624,8 +624,9 @@ type TaskType string
 
 // Token defines model for Token.
 type Token struct {
-	Amount  BigInt  `json:"amount"`
-	TokenID *string `json:"tokenID,omitempty"`
+	Amount    BigInt     `json:"amount"`
+	TokenID   *string    `json:"tokenID,omitempty"`
+	TokenType *TokenType `json:"tokenType,omitempty"`
 }
 
 // TokenManagerType defines model for TokenManagerType.
