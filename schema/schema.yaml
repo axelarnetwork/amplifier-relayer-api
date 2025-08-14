@@ -583,7 +583,7 @@ components:
               type: string
               format: byte
             withToken:
-                $ref: '#/components/schemas/UnsignedTokenWithRequiredTokenID'
+                $ref: '#/components/schemas/UnsignedTokenWithRequiredID'
           required:
             - message
             - destinationChain
@@ -1060,7 +1060,7 @@ components:
           $ref: '#/components/schemas/UnsignedBigInt'
       required:
         - amount
-    UnsignedTokenWithRequiredTokenID:
+    UnsignedTokenWithRequiredID:
       type: object
       properties:
         tokenID:
