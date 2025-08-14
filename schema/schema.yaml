@@ -1053,12 +1053,12 @@ components:
       properties:
         tokenID:
           type: string
+          nullable: true
           x-omitempty: true
           minLength: 1
         amount:
           $ref: '#/components/schemas/UnsignedBigInt'
       required:
-        - tokenID
         - amount
     InterchainTransferTokenWithAddress:
       type: object
