@@ -171,7 +171,7 @@ type CallEvent struct {
 	Message          Message            `json:"message"`
 	Meta             *CallEventMetadata `json:"meta,omitempty"`
 	Payload          []byte             `json:"payload"`
-	WithToken        *UnsignedToken     `json:"withToken,omitempty"`
+	WithToken        *WithToken         `json:"withToken,omitempty"`
 }
 
 // CallEventMetadata defines model for CallEventMetadata.
@@ -665,6 +665,12 @@ type WasmRequestWithObjectBody map[string]interface{}
 
 // WasmRequestWithStringBody defines model for WasmRequestWithStringBody.
 type WasmRequestWithStringBody = string
+
+// WithToken defines model for WithToken.
+type WithToken struct {
+	Amount  BigInt `json:"amount"`
+	TokenID string `json:"tokenID,omitempty"`
+}
 
 // After defines model for after.
 type After = uuid.UUID
