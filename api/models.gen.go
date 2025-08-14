@@ -630,7 +630,7 @@ type UnsignedBigInt = string
 // UnsignedToken defines model for UnsignedToken.
 type UnsignedToken struct {
 	Amount  UnsignedBigInt `json:"amount"`
-	TokenID *string        `json:"tokenID,omitempty"`
+	TokenID string         `json:"tokenID,omitempty"`
 }
 
 // VerificationStatus defines model for VerificationStatus.
