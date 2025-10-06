@@ -395,7 +395,7 @@ type ITSLinkTokenStartedEvent struct {
 
 // ITSTokenMetadataRegisteredEvent defines model for ITSTokenMetadataRegisteredEvent.
 type ITSTokenMetadataRegisteredEvent struct {
-	Address   Address        `json:"address"`
+	Address   *Address       `json:"address,omitempty"`
 	Decimals  uint8          `json:"decimals"`
 	EventID   string         `json:"eventID"`
 	MessageID string         `json:"messageID"`
