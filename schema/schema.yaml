@@ -391,6 +391,11 @@ components:
               nullable: true
               x-omitempty: true
               minLength: 1
+            senderContractAddress:
+              allOf:
+                - $ref: '#/components/schemas/Address'
+              nullable: true
+              x-omitempty: true
             sourceContext:
               $ref: '#/components/schemas/MessageContext'
     MessageApprovedEventMetadata:
@@ -1212,6 +1217,11 @@ components:
         The property `scopedMessages` can be omitted if the task isn't associated with any message (e.g. when executing `rotateSigners` https://github.com/axelarnetwork/axelar-gmp-sdk-solidity/blob/432449d7b330ec6edf5a8e0746644a253486ca87/contracts/gateway/AxelarAmplifierGateway.sol#L103C14-L103C27).
       type: object
       properties:
+        sourceChainSenderContractAddress:
+          allOf:
+            - $ref: '#/components/schemas/Address'
+          nullable: true
+          x-omitempty: true
         scopedMessages:
           type: array
           items:
