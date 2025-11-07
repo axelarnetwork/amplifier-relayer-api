@@ -176,13 +176,14 @@ type CallEvent struct {
 
 // CallEventMetadata defines model for CallEventMetadata.
 type CallEventMetadata struct {
-	Finalized         *bool           `json:"finalized,omitempty"`
-	FromAddress       *Address        `json:"fromAddress,omitempty"`
-	ParentMessageID   *string         `json:"parentMessageID,omitempty"`
-	ParentSourceChain *string         `json:"parentSourceChain,omitempty"`
-	SourceContext     *MessageContext `json:"sourceContext,omitempty"`
-	Timestamp         *time.Time      `json:"timestamp,omitempty"`
-	TxID              *string         `json:"txID,omitempty"`
+	Finalized             *bool           `json:"finalized,omitempty"`
+	FromAddress           *Address        `json:"fromAddress,omitempty"`
+	ParentMessageID       *string         `json:"parentMessageID,omitempty"`
+	ParentSourceChain     *string         `json:"parentSourceChain,omitempty"`
+	SenderContractAddress *Address        `json:"senderContractAddress,omitempty"`
+	SourceContext         *MessageContext `json:"sourceContext,omitempty"`
+	Timestamp             *time.Time      `json:"timestamp,omitempty"`
+	TxID                  *string         `json:"txID,omitempty"`
 }
 
 // CannotExecuteMessageEvent defines model for CannotExecuteMessageEvent.
@@ -271,7 +272,8 @@ type CrossChainID struct {
 // DestinationChainTaskMetadata Metadata attached to GATEWAY_TX and REACT_TO_EXPIRED_SIGNING_SESSION tasks.
 // The property `scopedMessages` can be omitted if the task isn't associated with any message (e.g. when executing `rotateSigners` https://github.com/axelarnetwork/axelar-gmp-sdk-solidity/blob/432449d7b330ec6edf5a8e0746644a253486ca87/contracts/gateway/AxelarAmplifierGateway.sol#L103C14-L103C27).
 type DestinationChainTaskMetadata struct {
-	ScopedMessages *[]CrossChainID `json:"scopedMessages,omitempty"`
+	ScopedMessages                   *[]CrossChainID `json:"scopedMessages,omitempty"`
+	SourceChainSenderContractAddress *Address        `json:"sourceChainSenderContractAddress,omitempty"`
 }
 
 // ErrorResponse defines model for ErrorResponse.
@@ -608,8 +610,9 @@ type TaskItemID = uuid.UUID
 
 // TaskMetadata defines model for TaskMetadata.
 type TaskMetadata struct {
-	ScopedMessages *[]CrossChainID `json:"scopedMessages,omitempty"`
-	SourceContext  *MessageContext `json:"sourceContext,omitempty"`
+	ScopedMessages                   *[]CrossChainID `json:"scopedMessages,omitempty"`
+	SourceChainSenderContractAddress *Address        `json:"sourceChainSenderContractAddress,omitempty"`
+	SourceContext                    *MessageContext `json:"sourceContext,omitempty"`
 }
 
 // TaskType defines model for TaskType.
