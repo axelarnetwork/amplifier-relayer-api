@@ -51,9 +51,13 @@ const (
 	EventTypeCannotRouteMessage                  EventType = "CANNOT_ROUTE_MESSAGE"
 	EventTypeGasCredit                           EventType = "GAS_CREDIT"
 	EventTypeGasRefunded                         EventType = "GAS_REFUNDED"
+	EventTypeITSFlowLimitSet                     EventType = "ITS/FLOW_LIMIT_SET"
+	EventTypeITSInterchainTokenDeployed          EventType = "ITS/INTERCHAIN_TOKEN_DEPLOYED"
 	EventTypeITSInterchainTokenDeploymentStarted EventType = "ITS/INTERCHAIN_TOKEN_DEPLOYMENT_STARTED"
 	EventTypeITSInterchainTransfer               EventType = "ITS/INTERCHAIN_TRANSFER"
+	EventTypeITSLinkTokenReceived                EventType = "ITS/LINK_TOKEN_RECEIVED"
 	EventTypeITSLinkTokenStarted                 EventType = "ITS/LINK_TOKEN_STARTED"
+	EventTypeITSTokenManagerDeployed             EventType = "ITS/TOKEN_MANAGER_DEPLOYED"
 	EventTypeITSTokenMetadataRegistered          EventType = "ITS/TOKEN_METADATA_REGISTERED"
 	EventTypeMessageApproved                     EventType = "MESSAGE_APPROVED"
 	EventTypeMessageExecuted                     EventType = "MESSAGE_EXECUTED"
@@ -362,6 +366,28 @@ type GetTasksResult struct {
 	Tasks []TaskItem `json:"tasks"`
 }
 
+// ITSFlowLimitSetEvent defines model for ITSFlowLimitSetEvent.
+type ITSFlowLimitSetEvent struct {
+	EventID   string         `json:"eventID"`
+	FlowLimit UnsignedBigInt `json:"flowLimit"`
+	Meta      *EventMetadata `json:"meta,omitempty"`
+	Operator  Address        `json:"operator"`
+	TokenID   string         `json:"tokenID"`
+}
+
+// ITSInterchainTokenDeployedEvent defines model for ITSInterchainTokenDeployedEvent.
+type ITSInterchainTokenDeployedEvent struct {
+	Decimals     uint8          `json:"decimals"`
+	EventID      string         `json:"eventID"`
+	MessageID    *string        `json:"messageID,omitempty"`
+	Meta         *EventMetadata `json:"meta,omitempty"`
+	Minter       Address        `json:"minter"`
+	Name         string         `json:"name"`
+	Symbol       string         `json:"symbol"`
+	TokenAddress Address        `json:"tokenAddress"`
+	TokenID      string         `json:"tokenID"`
+}
+
 // ITSInterchainTokenDeploymentStartedEvent defines model for ITSInterchainTokenDeploymentStartedEvent.
 type ITSInterchainTokenDeploymentStartedEvent struct {
 	DestinationChain string                    `json:"destinationChain"`
@@ -383,6 +409,18 @@ type ITSInterchainTransferEvent struct {
 	TokenSpent         InterchainTransferTokenWithID `json:"tokenSpent"`
 }
 
+// ITSLinkTokenReceivedEvent defines model for ITSLinkTokenReceivedEvent.
+type ITSLinkTokenReceivedEvent struct {
+	DestinationTokenAddress []byte           `json:"destinationTokenAddress"`
+	EventID                 string           `json:"eventID"`
+	MessageID               string           `json:"messageID"`
+	Meta                    *EventMetadata   `json:"meta,omitempty"`
+	SourceChain             string           `json:"sourceChain"`
+	SourceTokenAddress      []byte           `json:"sourceTokenAddress"`
+	TokenID                 string           `json:"tokenID"`
+	TokenManagerType        TokenManagerType `json:"tokenManagerType"`
+}
+
 // ITSLinkTokenStartedEvent defines model for ITSLinkTokenStartedEvent.
 type ITSLinkTokenStartedEvent struct {
 	DestinationChain        string           `json:"destinationChain"`
@@ -393,6 +431,16 @@ type ITSLinkTokenStartedEvent struct {
 	SourceTokenAddress      []byte           `json:"sourceTokenAddress"`
 	TokenID                 string           `json:"tokenID"`
 	TokenManagerType        TokenManagerType `json:"tokenManagerType"`
+}
+
+// ITSTokenManagerDeployedEvent defines model for ITSTokenManagerDeployedEvent.
+type ITSTokenManagerDeployedEvent struct {
+	EventID          string           `json:"eventID"`
+	MessageID        *string          `json:"messageID,omitempty"`
+	Meta             *EventMetadata   `json:"meta,omitempty"`
+	TokenID          string           `json:"tokenID"`
+	TokenManager     Address          `json:"tokenManager"`
+	TokenManagerType TokenManagerType `json:"tokenManagerType"`
 }
 
 // ITSTokenMetadataRegisteredEvent defines model for ITSTokenMetadataRegisteredEvent.
@@ -1214,6 +1262,126 @@ func (t *Event) MergeITSInterchainTransferEvent(v ITSInterchainTransferEvent) er
 	return err
 }
 
+// AsITSInterchainTokenDeployedEvent returns the union data inside the Event as a ITSInterchainTokenDeployedEvent
+func (t Event) AsITSInterchainTokenDeployedEvent() (ITSInterchainTokenDeployedEvent, error) {
+	var body ITSInterchainTokenDeployedEvent
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromITSInterchainTokenDeployedEvent overwrites any union data inside the Event as the provided ITSInterchainTokenDeployedEvent
+func (t *Event) FromITSInterchainTokenDeployedEvent(v ITSInterchainTokenDeployedEvent) error {
+	t.Type = "ITS/INTERCHAIN_TOKEN_DEPLOYED"
+
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeITSInterchainTokenDeployedEvent performs a merge with any union data inside the Event, using the provided ITSInterchainTokenDeployedEvent
+func (t *Event) MergeITSInterchainTokenDeployedEvent(v ITSInterchainTokenDeployedEvent) error {
+	t.Type = "ITS/INTERCHAIN_TOKEN_DEPLOYED"
+
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsITSTokenManagerDeployedEvent returns the union data inside the Event as a ITSTokenManagerDeployedEvent
+func (t Event) AsITSTokenManagerDeployedEvent() (ITSTokenManagerDeployedEvent, error) {
+	var body ITSTokenManagerDeployedEvent
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromITSTokenManagerDeployedEvent overwrites any union data inside the Event as the provided ITSTokenManagerDeployedEvent
+func (t *Event) FromITSTokenManagerDeployedEvent(v ITSTokenManagerDeployedEvent) error {
+	t.Type = "ITS/TOKEN_MANAGER_DEPLOYED"
+
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeITSTokenManagerDeployedEvent performs a merge with any union data inside the Event, using the provided ITSTokenManagerDeployedEvent
+func (t *Event) MergeITSTokenManagerDeployedEvent(v ITSTokenManagerDeployedEvent) error {
+	t.Type = "ITS/TOKEN_MANAGER_DEPLOYED"
+
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsITSLinkTokenReceivedEvent returns the union data inside the Event as a ITSLinkTokenReceivedEvent
+func (t Event) AsITSLinkTokenReceivedEvent() (ITSLinkTokenReceivedEvent, error) {
+	var body ITSLinkTokenReceivedEvent
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromITSLinkTokenReceivedEvent overwrites any union data inside the Event as the provided ITSLinkTokenReceivedEvent
+func (t *Event) FromITSLinkTokenReceivedEvent(v ITSLinkTokenReceivedEvent) error {
+	t.Type = "ITS/LINK_TOKEN_RECEIVED"
+
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeITSLinkTokenReceivedEvent performs a merge with any union data inside the Event, using the provided ITSLinkTokenReceivedEvent
+func (t *Event) MergeITSLinkTokenReceivedEvent(v ITSLinkTokenReceivedEvent) error {
+	t.Type = "ITS/LINK_TOKEN_RECEIVED"
+
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsITSFlowLimitSetEvent returns the union data inside the Event as a ITSFlowLimitSetEvent
+func (t Event) AsITSFlowLimitSetEvent() (ITSFlowLimitSetEvent, error) {
+	var body ITSFlowLimitSetEvent
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromITSFlowLimitSetEvent overwrites any union data inside the Event as the provided ITSFlowLimitSetEvent
+func (t *Event) FromITSFlowLimitSetEvent(v ITSFlowLimitSetEvent) error {
+	t.Type = "ITS/FLOW_LIMIT_SET"
+
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeITSFlowLimitSetEvent performs a merge with any union data inside the Event, using the provided ITSFlowLimitSetEvent
+func (t *Event) MergeITSFlowLimitSetEvent(v ITSFlowLimitSetEvent) error {
+	t.Type = "ITS/FLOW_LIMIT_SET"
+
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
 // AsAppInterchainTransferSentEvent returns the union data inside the Event as a AppInterchainTransferSentEvent
 func (t Event) AsAppInterchainTransferSentEvent() (AppInterchainTransferSentEvent, error) {
 	var body AppInterchainTransferSentEvent
@@ -1306,12 +1474,20 @@ func (t Event) ValueByDiscriminator() (interface{}, error) {
 		return t.AsGasCreditEvent()
 	case "GAS_REFUNDED":
 		return t.AsGasRefundedEvent()
+	case "ITS/FLOW_LIMIT_SET":
+		return t.AsITSFlowLimitSetEvent()
+	case "ITS/INTERCHAIN_TOKEN_DEPLOYED":
+		return t.AsITSInterchainTokenDeployedEvent()
 	case "ITS/INTERCHAIN_TOKEN_DEPLOYMENT_STARTED":
 		return t.AsITSInterchainTokenDeploymentStartedEvent()
 	case "ITS/INTERCHAIN_TRANSFER":
 		return t.AsITSInterchainTransferEvent()
+	case "ITS/LINK_TOKEN_RECEIVED":
+		return t.AsITSLinkTokenReceivedEvent()
 	case "ITS/LINK_TOKEN_STARTED":
 		return t.AsITSLinkTokenStartedEvent()
+	case "ITS/TOKEN_MANAGER_DEPLOYED":
+		return t.AsITSTokenManagerDeployedEvent()
 	case "ITS/TOKEN_METADATA_REGISTERED":
 		return t.AsITSTokenMetadataRegisteredEvent()
 	case "MESSAGE_APPROVED":

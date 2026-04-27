@@ -336,6 +336,10 @@ components:
         - ITS/TOKEN_METADATA_REGISTERED
         - ITS/INTERCHAIN_TOKEN_DEPLOYMENT_STARTED
         - ITS/INTERCHAIN_TRANSFER
+        - ITS/INTERCHAIN_TOKEN_DEPLOYED
+        - ITS/TOKEN_MANAGER_DEPLOYED
+        - ITS/LINK_TOKEN_RECEIVED
+        - ITS/FLOW_LIMIT_SET
         - APP/INTERCHAIN_TRANSFER_SENT
         - APP/INTERCHAIN_TRANSFER_RECEIVED
       x-enum-varnames:
@@ -354,6 +358,10 @@ components:
         - EventTypeITSTokenMetadataRegistered
         - EventTypeITSInterchainTokenDeploymentStarted
         - EventTypeITSInterchainTransfer
+        - EventTypeITSInterchainTokenDeployed
+        - EventTypeITSTokenManagerDeployed
+        - EventTypeITSLinkTokenReceived
+        - EventTypeITSFlowLimitSet
         - EventTypeAppInterchainTransferSent
         - EventTypeAppInterchainTransferReceived
     EventMetadata:
@@ -493,6 +501,10 @@ components:
         - $ref: '#/components/schemas/ITSTokenMetadataRegisteredEvent'
         - $ref: '#/components/schemas/ITSInterchainTokenDeploymentStartedEvent'
         - $ref: '#/components/schemas/ITSInterchainTransferEvent'
+        - $ref: '#/components/schemas/ITSInterchainTokenDeployedEvent'
+        - $ref: '#/components/schemas/ITSTokenManagerDeployedEvent'
+        - $ref: '#/components/schemas/ITSLinkTokenReceivedEvent'
+        - $ref: '#/components/schemas/ITSFlowLimitSetEvent'
         - $ref: '#/components/schemas/AppInterchainTransferSentEvent'
         - $ref: '#/components/schemas/AppInterchainTransferReceivedEvent'
       discriminator:
@@ -513,6 +525,10 @@ components:
           ITS/TOKEN_METADATA_REGISTERED: '#/components/schemas/ITSTokenMetadataRegisteredEvent'
           ITS/INTERCHAIN_TOKEN_DEPLOYMENT_STARTED: '#/components/schemas/ITSInterchainTokenDeploymentStartedEvent'
           ITS/INTERCHAIN_TRANSFER: '#/components/schemas/ITSInterchainTransferEvent'
+          ITS/INTERCHAIN_TOKEN_DEPLOYED: '#/components/schemas/ITSInterchainTokenDeployedEvent'
+          ITS/TOKEN_MANAGER_DEPLOYED: '#/components/schemas/ITSTokenManagerDeployedEvent'
+          ITS/LINK_TOKEN_RECEIVED: '#/components/schemas/ITSLinkTokenReceivedEvent'
+          ITS/FLOW_LIMIT_SET: '#/components/schemas/ITSFlowLimitSetEvent'
           APP/INTERCHAIN_TRANSFER_SENT: '#/components/schemas/AppInterchainTransferSentEvent'
           APP/INTERCHAIN_TRANSFER_RECEIVED: '#/components/schemas/AppInterchainTransferReceivedEvent'
       properties:
@@ -901,6 +917,108 @@ components:
             - sourceAddress
             - destinationAddress
             - dataHash
+    ITSInterchainTokenDeployedEvent:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/EventBase'
+        - properties:
+            messageID:
+              type: string
+              minLength: 1
+              nullable: true
+              x-omitempty: true
+            tokenID:
+              type: string
+              minLength: 1
+            tokenAddress:
+              $ref: '#/components/schemas/Address'
+            minter:
+              $ref: '#/components/schemas/Address'
+            name:
+              type: string
+              minLength: 1
+            symbol:
+              type: string
+              minLength: 1
+            decimals:
+              type: integer
+              format: uint8
+              minimum: 0
+          required:
+            - tokenID
+            - tokenAddress
+            - minter
+            - name
+            - symbol
+            - decimals
+    ITSTokenManagerDeployedEvent:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/EventBase'
+        - properties:
+            messageID:
+              type: string
+              minLength: 1
+              nullable: true
+              x-omitempty: true
+            tokenID:
+              type: string
+              minLength: 1
+            tokenManager:
+              $ref: '#/components/schemas/Address'
+            tokenManagerType:
+              $ref: '#/components/schemas/TokenManagerType'
+          required:
+            - tokenID
+            - tokenManager
+            - tokenManagerType
+    ITSLinkTokenReceivedEvent:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/EventBase'
+        - properties:
+            messageID:
+              type: string
+              minLength: 1
+            tokenID:
+              type: string
+              minLength: 1
+            sourceChain:
+              type: string
+              minLength: 1
+            sourceTokenAddress:
+              type: string
+              format: byte
+              minLength: 1
+            destinationTokenAddress:
+              type: string
+              format: byte
+              minLength: 1
+            tokenManagerType:
+              $ref: '#/components/schemas/TokenManagerType'
+          required:
+            - messageID
+            - tokenID
+            - sourceChain
+            - sourceTokenAddress
+            - destinationTokenAddress
+            - tokenManagerType
+    ITSFlowLimitSetEvent:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/EventBase'
+        - properties:
+            tokenID:
+              type: string
+              minLength: 1
+            operator:
+              $ref: '#/components/schemas/Address'
+            flowLimit:
+              $ref: '#/components/schemas/UnsignedBigInt'
+          required:
+            - tokenID
+            - operator
+            - flowLimit
     AppInterchainTransferSentEvent:
       type: object
       allOf:
