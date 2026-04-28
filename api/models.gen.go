@@ -372,20 +372,20 @@ type ITSFlowLimitSetEvent struct {
 	FlowLimit UnsignedBigInt `json:"flowLimit"`
 	Meta      *EventMetadata `json:"meta,omitempty"`
 	Operator  Address        `json:"operator"`
-	TokenID   string         `json:"tokenID"`
+	TokenID   TokenID        `json:"tokenID"`
 }
 
 // ITSInterchainTokenDeployedEvent defines model for ITSInterchainTokenDeployedEvent.
 type ITSInterchainTokenDeployedEvent struct {
 	Decimals     uint8          `json:"decimals"`
 	EventID      string         `json:"eventID"`
-	MessageID    *string        `json:"messageID,omitempty"`
+	MessageID    *string        `json:"messageID"`
 	Meta         *EventMetadata `json:"meta,omitempty"`
 	Minter       Address        `json:"minter"`
 	Name         string         `json:"name"`
 	Symbol       string         `json:"symbol"`
 	TokenAddress Address        `json:"tokenAddress"`
-	TokenID      string         `json:"tokenID"`
+	TokenID      TokenID        `json:"tokenID"`
 }
 
 // ITSInterchainTokenDeploymentStartedEvent defines model for ITSInterchainTokenDeploymentStartedEvent.
@@ -417,7 +417,7 @@ type ITSLinkTokenReceivedEvent struct {
 	Meta                    *EventMetadata   `json:"meta,omitempty"`
 	SourceChain             string           `json:"sourceChain"`
 	SourceTokenAddress      []byte           `json:"sourceTokenAddress"`
-	TokenID                 string           `json:"tokenID"`
+	TokenID                 TokenID          `json:"tokenID"`
 	TokenManagerType        TokenManagerType `json:"tokenManagerType"`
 }
 
@@ -429,16 +429,16 @@ type ITSLinkTokenStartedEvent struct {
 	MessageID               string           `json:"messageID"`
 	Meta                    *EventMetadata   `json:"meta,omitempty"`
 	SourceTokenAddress      []byte           `json:"sourceTokenAddress"`
-	TokenID                 string           `json:"tokenID"`
+	TokenID                 TokenID          `json:"tokenID"`
 	TokenManagerType        TokenManagerType `json:"tokenManagerType"`
 }
 
 // ITSTokenManagerDeployedEvent defines model for ITSTokenManagerDeployedEvent.
 type ITSTokenManagerDeployedEvent struct {
 	EventID          string           `json:"eventID"`
-	MessageID        *string          `json:"messageID,omitempty"`
+	MessageID        *string          `json:"messageID"`
 	Meta             *EventMetadata   `json:"meta,omitempty"`
-	TokenID          string           `json:"tokenID"`
+	TokenID          TokenID          `json:"tokenID"`
 	TokenManager     Address          `json:"tokenManager"`
 	TokenManagerType TokenManagerType `json:"tokenManagerType"`
 }
@@ -469,7 +469,7 @@ type InterchainTransferTokenWithAddress struct {
 // InterchainTransferTokenWithID defines model for InterchainTransferTokenWithID.
 type InterchainTransferTokenWithID struct {
 	Amount  UnsignedBigInt `json:"amount"`
-	TokenID string         `json:"tokenID"`
+	TokenID TokenID        `json:"tokenID"`
 }
 
 // Keccak256Hash defines model for Keccak256Hash.
@@ -668,9 +668,12 @@ type TaskType string
 
 // Token defines model for Token.
 type Token struct {
-	Amount  BigInt  `json:"amount"`
-	TokenID *string `json:"tokenID,omitempty"`
+	Amount  BigInt   `json:"amount"`
+	TokenID *TokenID `json:"tokenID,omitempty"`
 }
+
+// TokenID defines model for TokenID.
+type TokenID = string
 
 // TokenManagerType defines model for TokenManagerType.
 type TokenManagerType string
@@ -681,13 +684,13 @@ type UnsignedBigInt = string
 // UnsignedToken defines model for UnsignedToken.
 type UnsignedToken struct {
 	Amount  UnsignedBigInt `json:"amount"`
-	TokenID *string        `json:"tokenID,omitempty"`
+	TokenID *TokenID       `json:"tokenID,omitempty"`
 }
 
 // UnsignedTokenWithRequiredID defines model for UnsignedTokenWithRequiredID.
 type UnsignedTokenWithRequiredID struct {
 	Amount  UnsignedBigInt `json:"amount"`
-	TokenID string         `json:"tokenID"`
+	TokenID TokenID        `json:"tokenID"`
 }
 
 // VerificationStatus defines model for VerificationStatus.

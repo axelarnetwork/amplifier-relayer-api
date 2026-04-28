@@ -848,8 +848,7 @@ components:
               type: string
               minLength: 1
             tokenID:
-              type: string
-              minLength: 1
+              $ref: '#/components/schemas/TokenID'
             destinationChain:
               type: string
               minLength: 1
@@ -926,10 +925,8 @@ components:
               type: string
               minLength: 1
               nullable: true
-              x-omitempty: true
             tokenID:
-              type: string
-              minLength: 1
+              $ref: '#/components/schemas/TokenID'
             tokenAddress:
               $ref: '#/components/schemas/Address'
             minter:
@@ -945,6 +942,7 @@ components:
               format: uint8
               minimum: 0
           required:
+            - messageID
             - tokenID
             - tokenAddress
             - minter
@@ -960,15 +958,14 @@ components:
               type: string
               minLength: 1
               nullable: true
-              x-omitempty: true
             tokenID:
-              type: string
-              minLength: 1
+              $ref: '#/components/schemas/TokenID'
             tokenManager:
               $ref: '#/components/schemas/Address'
             tokenManagerType:
               $ref: '#/components/schemas/TokenManagerType'
           required:
+            - messageID
             - tokenID
             - tokenManager
             - tokenManagerType
@@ -981,8 +978,7 @@ components:
               type: string
               minLength: 1
             tokenID:
-              type: string
-              minLength: 1
+              $ref: '#/components/schemas/TokenID'
             sourceChain:
               type: string
               minLength: 1
@@ -1009,8 +1005,7 @@ components:
         - $ref: '#/components/schemas/EventBase'
         - properties:
             tokenID:
-              type: string
-              minLength: 1
+              $ref: '#/components/schemas/TokenID'
             operator:
               $ref: '#/components/schemas/Address'
             flowLimit:
@@ -1163,10 +1158,10 @@ components:
       type: object
       properties:
         tokenID:
-          type: string
+          allOf:
+            - $ref: '#/components/schemas/TokenID'
           nullable: true
           x-omitempty: true
-          minLength: 1
         amount:
           $ref: '#/components/schemas/BigInt'
       required:
@@ -1175,10 +1170,10 @@ components:
       type: object
       properties:
         tokenID:
-          type: string
+          allOf:
+            - $ref: '#/components/schemas/TokenID'
           nullable: true
           x-omitempty: true
-          minLength: 1
         amount:
           $ref: '#/components/schemas/UnsignedBigInt'
       required:
@@ -1187,8 +1182,7 @@ components:
       type: object
       properties:
         tokenID:
-          type: string
-          minLength: 1
+          $ref: '#/components/schemas/TokenID'
         amount:
           $ref: '#/components/schemas/UnsignedBigInt'
       required:
@@ -1208,8 +1202,7 @@ components:
       type: object
       properties:
         tokenID:
-          type: string
-          minLength: 1
+          $ref: '#/components/schemas/TokenID'
         amount:
           $ref: '#/components/schemas/UnsignedBigInt'
       required:
@@ -1645,6 +1638,9 @@ components:
       type: string
       pattern: '^(0|[1-9]\d*)$'
     Keccak256Hash:
+      type: string
+      pattern: '^0x[0-9a-f]{64}$'
+    TokenID:
       type: string
       pattern: '^0x[0-9a-f]{64}$'
     TokenManagerType:
