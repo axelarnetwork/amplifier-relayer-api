@@ -113,6 +113,10 @@ func TestEvent_Validate_WhenValid(t *testing.T) {
 		eventWithoutCost(api.EventTypeITSLinkTokenStarted),
 		eventWithoutCost(api.EventTypeITSInterchainTokenDeploymentStarted),
 		eventWithoutCost(api.EventTypeITSInterchainTokenDeploymentStarted),
+		eventWithoutCost(api.EventTypeITSInterchainTokenDeployed),
+		eventWithoutCost(api.EventTypeITSTokenManagerDeployed),
+		eventWithoutCost(api.EventTypeITSLinkTokenReceived),
+		eventWithoutCost(api.EventTypeITSFlowLimitSet),
 	}
 	validEvents := slices.Concat(validEventsWithCost, validEventsWithoutCost)
 
