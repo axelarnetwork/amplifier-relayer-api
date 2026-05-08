@@ -110,6 +110,7 @@ func TestEvent_Validate_WhenValid(t *testing.T) {
 		eventWithoutCost(api.EventTypeCannotRouteMessage),
 		eventWithoutCost(api.EventTypeGasCredit),
 		eventWithoutCost(api.EventTypeITSInterchainTransfer),
+		eventWithoutCost(api.EventTypeITSInterchainTransferReceived),
 		eventWithoutCost(api.EventTypeITSLinkTokenStarted),
 		eventWithoutCost(api.EventTypeITSInterchainTokenDeploymentStarted),
 		eventWithoutCost(api.EventTypeITSInterchainTokenDeploymentStarted),
