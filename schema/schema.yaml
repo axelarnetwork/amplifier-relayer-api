@@ -336,6 +336,7 @@ components:
         - ITS/TOKEN_METADATA_REGISTERED
         - ITS/INTERCHAIN_TOKEN_DEPLOYMENT_STARTED
         - ITS/INTERCHAIN_TRANSFER
+        - ITS/INTERCHAIN_TRANSFER_RECEIVED
         - ITS/INTERCHAIN_TOKEN_DEPLOYED
         - ITS/TOKEN_MANAGER_DEPLOYED
         - ITS/LINK_TOKEN_RECEIVED
@@ -358,6 +359,7 @@ components:
         - EventTypeITSTokenMetadataRegistered
         - EventTypeITSInterchainTokenDeploymentStarted
         - EventTypeITSInterchainTransfer
+        - EventTypeITSInterchainTransferReceived
         - EventTypeITSInterchainTokenDeployed
         - EventTypeITSTokenManagerDeployed
         - EventTypeITSLinkTokenReceived
@@ -501,6 +503,7 @@ components:
         - $ref: '#/components/schemas/ITSTokenMetadataRegisteredEvent'
         - $ref: '#/components/schemas/ITSInterchainTokenDeploymentStartedEvent'
         - $ref: '#/components/schemas/ITSInterchainTransferEvent'
+        - $ref: '#/components/schemas/ITSInterchainTransferReceivedEvent'
         - $ref: '#/components/schemas/ITSInterchainTokenDeployedEvent'
         - $ref: '#/components/schemas/ITSTokenManagerDeployedEvent'
         - $ref: '#/components/schemas/ITSLinkTokenReceivedEvent'
@@ -525,6 +528,7 @@ components:
           ITS/TOKEN_METADATA_REGISTERED: '#/components/schemas/ITSTokenMetadataRegisteredEvent'
           ITS/INTERCHAIN_TOKEN_DEPLOYMENT_STARTED: '#/components/schemas/ITSInterchainTokenDeploymentStartedEvent'
           ITS/INTERCHAIN_TRANSFER: '#/components/schemas/ITSInterchainTransferEvent'
+          ITS/INTERCHAIN_TRANSFER_RECEIVED: '#/components/schemas/ITSInterchainTransferReceivedEvent'
           ITS/INTERCHAIN_TOKEN_DEPLOYED: '#/components/schemas/ITSInterchainTokenDeployedEvent'
           ITS/TOKEN_MANAGER_DEPLOYED: '#/components/schemas/ITSTokenManagerDeployedEvent'
           ITS/LINK_TOKEN_RECEIVED: '#/components/schemas/ITSLinkTokenReceivedEvent'
@@ -915,6 +919,36 @@ components:
             - tokenSpent
             - sourceAddress
             - destinationAddress
+            - dataHash
+    ITSInterchainTransferReceivedEvent:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/EventBase'
+        - properties:
+            messageID:
+              type: string
+              minLength: 1
+            sourceChain:
+              type: string
+              minLength: 1
+            sourceAddress:
+              type: string
+              format: byte
+              minLength: 1
+            destinationAddress:
+              $ref: '#/components/schemas/Address'
+            tokenReceived:
+              $ref: '#/components/schemas/InterchainTransferTokenWithID'
+            dataHash:
+              type: string
+              format: byte
+              minLength: 0
+          required:
+            - messageID
+            - sourceChain
+            - sourceAddress
+            - destinationAddress
+            - tokenReceived
             - dataHash
     ITSInterchainTokenDeployedEvent:
       type: object

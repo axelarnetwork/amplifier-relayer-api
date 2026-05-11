@@ -55,6 +55,7 @@ const (
 	EventTypeITSInterchainTokenDeployed          EventType = "ITS/INTERCHAIN_TOKEN_DEPLOYED"
 	EventTypeITSInterchainTokenDeploymentStarted EventType = "ITS/INTERCHAIN_TOKEN_DEPLOYMENT_STARTED"
 	EventTypeITSInterchainTransfer               EventType = "ITS/INTERCHAIN_TRANSFER"
+	EventTypeITSInterchainTransferReceived       EventType = "ITS/INTERCHAIN_TRANSFER_RECEIVED"
 	EventTypeITSLinkTokenReceived                EventType = "ITS/LINK_TOKEN_RECEIVED"
 	EventTypeITSLinkTokenStarted                 EventType = "ITS/LINK_TOKEN_STARTED"
 	EventTypeITSTokenManagerDeployed             EventType = "ITS/TOKEN_MANAGER_DEPLOYED"
@@ -407,6 +408,18 @@ type ITSInterchainTransferEvent struct {
 	Meta               *EventMetadata                `json:"meta,omitempty"`
 	SourceAddress      Address                       `json:"sourceAddress"`
 	TokenSpent         InterchainTransferTokenWithID `json:"tokenSpent"`
+}
+
+// ITSInterchainTransferReceivedEvent defines model for ITSInterchainTransferReceivedEvent.
+type ITSInterchainTransferReceivedEvent struct {
+	DataHash           []byte                        `json:"dataHash"`
+	DestinationAddress Address                       `json:"destinationAddress"`
+	EventID            string                        `json:"eventID"`
+	MessageID          string                        `json:"messageID"`
+	Meta               *EventMetadata                `json:"meta,omitempty"`
+	SourceAddress      []byte                        `json:"sourceAddress"`
+	SourceChain        string                        `json:"sourceChain"`
+	TokenReceived      InterchainTransferTokenWithID `json:"tokenReceived"`
 }
 
 // ITSLinkTokenReceivedEvent defines model for ITSLinkTokenReceivedEvent.
@@ -1265,6 +1278,36 @@ func (t *Event) MergeITSInterchainTransferEvent(v ITSInterchainTransferEvent) er
 	return err
 }
 
+// AsITSInterchainTransferReceivedEvent returns the union data inside the Event as a ITSInterchainTransferReceivedEvent
+func (t Event) AsITSInterchainTransferReceivedEvent() (ITSInterchainTransferReceivedEvent, error) {
+	var body ITSInterchainTransferReceivedEvent
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromITSInterchainTransferReceivedEvent overwrites any union data inside the Event as the provided ITSInterchainTransferReceivedEvent
+func (t *Event) FromITSInterchainTransferReceivedEvent(v ITSInterchainTransferReceivedEvent) error {
+	t.Type = "ITS/INTERCHAIN_TRANSFER_RECEIVED"
+
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeITSInterchainTransferReceivedEvent performs a merge with any union data inside the Event, using the provided ITSInterchainTransferReceivedEvent
+func (t *Event) MergeITSInterchainTransferReceivedEvent(v ITSInterchainTransferReceivedEvent) error {
+	t.Type = "ITS/INTERCHAIN_TRANSFER_RECEIVED"
+
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
 // AsITSInterchainTokenDeployedEvent returns the union data inside the Event as a ITSInterchainTokenDeployedEvent
 func (t Event) AsITSInterchainTokenDeployedEvent() (ITSInterchainTokenDeployedEvent, error) {
 	var body ITSInterchainTokenDeployedEvent
@@ -1485,6 +1528,8 @@ func (t Event) ValueByDiscriminator() (interface{}, error) {
 		return t.AsITSInterchainTokenDeploymentStartedEvent()
 	case "ITS/INTERCHAIN_TRANSFER":
 		return t.AsITSInterchainTransferEvent()
+	case "ITS/INTERCHAIN_TRANSFER_RECEIVED":
+		return t.AsITSInterchainTransferReceivedEvent()
 	case "ITS/LINK_TOKEN_RECEIVED":
 		return t.AsITSLinkTokenReceivedEvent()
 	case "ITS/LINK_TOKEN_STARTED":
