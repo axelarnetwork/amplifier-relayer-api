@@ -1,14 +1,14 @@
 shared:
-  mandatory_pr_checks_successful: &mandatory_pr_checks_successful
+  mandatory_pr_checks_successful:
     - "check-success=Rule: Check Conventional Commits (post_check)"
 
     - or:
-      - "-files~=(go\\.mod|go\\.sum|\\.go)$"
-      - and:
-        - "check-success=revive"
-        - "check-success=staticcheck"
-        - "check-success=golines"
-        - "check-success=unit-tests"
+        - "-files~=(go\\.mod|go\\.sum|\\.go)$"
+        - and:
+            - "check-success=revive"
+            - "check-success=staticcheck"
+            - "check-success=golines"
+            - "check-success=unit-tests"
 
   base_is_main_or_release_branch: &base_is_main_or_release_branch
     - or: ["base=main", "base~=^releases/.+"]
@@ -49,58 +49,61 @@ commands_restrictions:
       - and: *is_not_merge_pr
 
 pull_request_rules:
-  - name: Check Conventional Commits
-    conditions: *base_is_main_or_release_branch
-    actions:
-      post_check:
-        success_conditions:
-          - or:
-              - "title~=^(fix|feat|docs|style|refactor|perf|test|build|ci|chore|revert)(?:\\(.+\\))?!?:\\s[\\da-z]"
-              - and: *is_merge_pr
-        title: |
-          {% if check_status == "success" %}
-          Title is valid
-          {% else %}
-          Title is invalid
-          {% endif %}
-        summary: |
-          {% if check_status == "failure" %}
-          Your pull request either must have title that follows [Conventional Commit](https://www.conventionalcommits.org/en/v1.0.0/), or be a merge PR.
-          {% endif %}
-          Title checked: 
-          ```
-          {{ title }}
-          ```
-
   - name: "Automatically fast-forward merge PRs to main when checks passed and approved"
     conditions:
-      - "-label=do_not_merge"
-      - "#approved-reviews-by>=1"
-      - "branch-protection-review-decision=APPROVED"
-      - "#commits-behind=0"
-      - "commits[*].commit_message~=(?m)^Merge `v\\d+\\.\\d+\\.\\d+` into `main`$"
-      - "-commits[*].commit_message~=(?m)^Merge branch '{{ base }}' into {{ head }}$"
-      - and: *mandatory_pr_checks_successful
-      - and: *is_merge_pr
+      - -label=do_not_merge
+      - '#approved-reviews-by>=1'
+      - github-review-decision=APPROVED
+      - '#commits-behind=0'
+      - commits[*].commit_message~=(?m)^Merge `v\d+\.\d+\.\d+` into `main`$
+      - -commits[*].commit_message~=(?m)^Merge branch '{{ base }}' into {{ head }}$
+      - and:
+          - 'check-success=Rule: Check Conventional Commits (post_check)'
+          - or:
+              - -files~=(go\.mod|go\.sum|\.go)$
+              - and:
+                  - check-success=revive
+                  - check-success=staticcheck
+                  - check-success=golines
+                  - check-success=unit-tests
+      - and:
+          - title~=^Merge `v\d+\.\d+\.\d+` into `main`$
+          - base=main
+          - head~=^v\d+\.\d+\.\d+-to-main$
     actions:
       merge:
         method: fast-forward
 
   - name: "Automatically squash non-merge PRs to main or releases/* when checks passed and approved"
     conditions:
-      - "-label=do_not_merge"
-      - "-label=conflicts"
+      - -label=do_not_merge
+      - -label=conflicts
       - or:
           - and:
-            - "#approved-reviews-by>=1"
-            - "-head~=^mergify/bp/.+$"
-            - and: *base_is_main_or_release_branch
+              - '#approved-reviews-by>=1'
+              - -head~=^mergify/bp/.+$
+              - and:
+                  - or:
+                      - base=main
+                      - base~=^releases/.+
           - and:
-            - "#approved-reviews-by>=2"
-            - "head~=^mergify/bp/.+$"
-      - "branch-protection-review-decision=APPROVED"
-      - and: *mandatory_pr_checks_successful
-      - and: *is_not_merge_pr
+              - '#approved-reviews-by>=2'
+              - head~=^mergify/bp/.+$
+      - github-review-decision=APPROVED
+      - and:
+          - 'check-success=Rule: Check Conventional Commits (post_check)'
+          - or:
+              - -files~=(go\.mod|go\.sum|\.go)$
+              - and:
+                  - check-success=revive
+                  - check-success=staticcheck
+                  - check-success=golines
+                  - check-success=unit-tests
+      - and:
+          - or:
+              - -title~=^Merge `v\d+\.\d+\.\d+` into `main`$
+              - -base=main
+              - -head~=^v\d+\.\d+\.\d+-to-main$
     actions:
       merge:
         method: squash
@@ -199,3 +202,11 @@ pull_request_rules:
       label:
         remove:
           - checks_pending
+merge_protections:
+  # Migrated from post_check rule 'Check Conventional Commits'. Dropped options with no equivalent: title, summary
+  - name: Check Conventional Commits
+    if: *base_is_main_or_release_branch
+    success_conditions:
+      - or:
+          - "title~=^(fix|feat|docs|style|refactor|perf|test|build|ci|chore|revert)(?:\\(.+\\))?!?:\\s[\\da-z]"
+          - and: *is_merge_pr
