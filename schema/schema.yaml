@@ -343,6 +343,7 @@ components:
         - ITS/FLOW_LIMIT_SET
         - APP/INTERCHAIN_TRANSFER_SENT
         - APP/INTERCHAIN_TRANSFER_RECEIVED
+        - AXELAR_APP/QUOTE_CONSUMED
       x-enum-varnames:
         - EventTypeGasCredit
         - EventTypeGasRefunded
@@ -366,6 +367,7 @@ components:
         - EventTypeITSFlowLimitSet
         - EventTypeAppInterchainTransferSent
         - EventTypeAppInterchainTransferReceived
+        - EventTypeAxelarAppQuoteConsumed
     EventMetadata:
       type: object
       properties:
@@ -510,6 +512,7 @@ components:
         - $ref: '#/components/schemas/ITSFlowLimitSetEvent'
         - $ref: '#/components/schemas/AppInterchainTransferSentEvent'
         - $ref: '#/components/schemas/AppInterchainTransferReceivedEvent'
+        - $ref: '#/components/schemas/AxelarAppQuoteConsumedEvent'
       discriminator:
         propertyName: type
         mapping:
@@ -535,6 +538,7 @@ components:
           ITS/FLOW_LIMIT_SET: '#/components/schemas/ITSFlowLimitSetEvent'
           APP/INTERCHAIN_TRANSFER_SENT: '#/components/schemas/AppInterchainTransferSentEvent'
           APP/INTERCHAIN_TRANSFER_RECEIVED: '#/components/schemas/AppInterchainTransferReceivedEvent'
+          AXELAR_APP/QUOTE_CONSUMED: '#/components/schemas/AxelarAppQuoteConsumedEvent'
       properties:
         type:
           $ref: '#/components/schemas/EventType'
@@ -1115,6 +1119,51 @@ components:
             - sender
             - recipient
             - tokenReceived
+    AxelarAppQuoteConsumedEvent:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/EventBase'
+        - properties:
+            actionID:
+              description: The event's bytes32 actionId, as 0x-prefixed hex.
+              type: string
+              minLength: 1
+            outputAmount:
+              $ref: '#/components/schemas/UnsignedBigInt'
+            eventIndex:
+              description: The event's position within the transaction's logs (0 for the first log), not the block-wide log index.
+              type: integer
+              format: int64
+              minimum: 0
+            blockNumber:
+              type: integer
+              format: int64
+              minimum: 0
+            blockHash:
+              description: 0x-prefixed hex.
+              type: string
+              minLength: 1
+            gatewayCall:
+              $ref: '#/components/schemas/AxelarAppGatewayCall'
+          required:
+            - actionID
+            - outputAmount
+            - eventIndex
+            - blockNumber
+            - blockHash
+    AxelarAppGatewayCall:
+      description: |
+        Present when the action sent a GMP call through the gateway (ITS or gateway send), absent for same-chain swaps.
+        `<txID>-<eventIndex>` is that GMP message's id.
+      type: object
+      properties:
+        eventIndex:
+          description: The gateway call's position within the transaction's logs (0 for the first log), not the block-wide log index.
+          type: integer
+          format: int64
+          minimum: 0
+      required:
+        - eventIndex
     Message:
         type: object
         properties:

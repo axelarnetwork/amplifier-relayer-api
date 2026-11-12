@@ -44,6 +44,7 @@ const (
 const (
 	EventTypeAppInterchainTransferReceived       EventType = "APP/INTERCHAIN_TRANSFER_RECEIVED"
 	EventTypeAppInterchainTransferSent           EventType = "APP/INTERCHAIN_TRANSFER_SENT"
+	EventTypeAxelarAppQuoteConsumed              EventType = "AXELAR_APP/QUOTE_CONSUMED"
 	EventTypeCall                                EventType = "CALL"
 	EventTypeCannotExecuteMessage                EventType = "CANNOT_EXECUTE_MESSAGE"
 	EventTypeCannotExecuteMessageV2              EventType = "CANNOT_EXECUTE_MESSAGE/V2"
@@ -143,6 +144,33 @@ type AppInterchainTransferSentEvent struct {
 	Recipient                  []byte                             `json:"recipient"`
 	Sender                     Address                            `json:"sender"`
 	TokenSpent                 InterchainTransferTokenWithAddress `json:"tokenSpent"`
+}
+
+// AxelarAppGatewayCall Present when the action sent a GMP call through the gateway (ITS or gateway send), absent for same-chain swaps.
+// `<txID>-<eventIndex>` is that GMP message's id.
+type AxelarAppGatewayCall struct {
+	// EventIndex The gateway call's position within the transaction's logs (0 for the first log), not the block-wide log index.
+	EventIndex int64 `json:"eventIndex"`
+}
+
+// AxelarAppQuoteConsumedEvent defines model for AxelarAppQuoteConsumedEvent.
+type AxelarAppQuoteConsumedEvent struct {
+	// ActionID The event's bytes32 actionId, as 0x-prefixed hex.
+	ActionID string `json:"actionID"`
+
+	// BlockHash 0x-prefixed hex.
+	BlockHash   string `json:"blockHash"`
+	BlockNumber int64  `json:"blockNumber"`
+	EventID     string `json:"eventID"`
+
+	// EventIndex The event's position within the transaction's logs (0 for the first log), not the block-wide log index.
+	EventIndex int64 `json:"eventIndex"`
+
+	// GatewayCall Present when the action sent a GMP call through the gateway (ITS or gateway send), absent for same-chain swaps.
+	// `<txID>-<eventIndex>` is that GMP message's id.
+	GatewayCall  *AxelarAppGatewayCall `json:"gatewayCall,omitempty"`
+	Meta         *EventMetadata        `json:"meta,omitempty"`
+	OutputAmount UnsignedBigInt        `json:"outputAmount"`
 }
 
 // BigInt defines model for BigInt.
@@ -1488,6 +1516,36 @@ func (t *Event) MergeAppInterchainTransferReceivedEvent(v AppInterchainTransferR
 	return err
 }
 
+// AsAxelarAppQuoteConsumedEvent returns the union data inside the Event as a AxelarAppQuoteConsumedEvent
+func (t Event) AsAxelarAppQuoteConsumedEvent() (AxelarAppQuoteConsumedEvent, error) {
+	var body AxelarAppQuoteConsumedEvent
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromAxelarAppQuoteConsumedEvent overwrites any union data inside the Event as the provided AxelarAppQuoteConsumedEvent
+func (t *Event) FromAxelarAppQuoteConsumedEvent(v AxelarAppQuoteConsumedEvent) error {
+	t.Type = "AXELAR_APP/QUOTE_CONSUMED"
+
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeAxelarAppQuoteConsumedEvent performs a merge with any union data inside the Event, using the provided AxelarAppQuoteConsumedEvent
+func (t *Event) MergeAxelarAppQuoteConsumedEvent(v AxelarAppQuoteConsumedEvent) error {
+	t.Type = "AXELAR_APP/QUOTE_CONSUMED"
+
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
 func (t Event) Discriminator() (string, error) {
 	var discriminator struct {
 		Discriminator string `json:"type"`
@@ -1506,6 +1564,8 @@ func (t Event) ValueByDiscriminator() (interface{}, error) {
 		return t.AsAppInterchainTransferReceivedEvent()
 	case "APP/INTERCHAIN_TRANSFER_SENT":
 		return t.AsAppInterchainTransferSentEvent()
+	case "AXELAR_APP/QUOTE_CONSUMED":
+		return t.AsAxelarAppQuoteConsumedEvent()
 	case "CALL":
 		return t.AsCallEvent()
 	case "CANNOT_EXECUTE_MESSAGE":
