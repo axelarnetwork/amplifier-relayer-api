@@ -107,6 +107,7 @@ func TestEvent_Validate_WhenValid(t *testing.T) {
 		eventWithoutCost(api.EventTypeSignersRotated),
 		eventWithoutCost(api.EventTypeAppInterchainTransferReceived),
 		eventWithoutCost(api.EventTypeAppInterchainTransferSent),
+		eventWithoutCost(api.EventTypeAxelarAppQuoteConsumed),
 		eventWithoutCost(api.EventTypeCannotRouteMessage),
 		eventWithoutCost(api.EventTypeGasCredit),
 		eventWithoutCost(api.EventTypeITSInterchainTransfer),
