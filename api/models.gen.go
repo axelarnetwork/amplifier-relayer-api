@@ -146,8 +146,9 @@ type AppInterchainTransferSentEvent struct {
 	TokenSpent                 InterchainTransferTokenWithAddress `json:"tokenSpent"`
 }
 
-// AxelarAppGatewayCall Present when the action sent a GMP call through the gateway (ITS or gateway send), absent for same-chain swaps.
-// `<txID>-<eventIndex>` is that GMP message's id.
+// AxelarAppGatewayCall The gateway `ContractCall` or `ContractCallWithToken` directly before this event in the transaction, if any.
+// For an ITS or gateway send it's the action's GMP call, and `<txID>-<eventIndex>` is its message id.
+// Usually absent for same-chain swaps, but present when the swap's output goes to a contract that calls the gateway itself; ignore it for same-chain swaps.
 type AxelarAppGatewayCall struct {
 	// EventIndex The gateway call's position within the transaction's logs (0 for the first log), not the block-wide log index.
 	EventIndex int64 `json:"eventIndex"`
@@ -166,8 +167,9 @@ type AxelarAppQuoteConsumedEvent struct {
 	// EventIndex The event's position within the transaction's logs (0 for the first log), not the block-wide log index.
 	EventIndex int64 `json:"eventIndex"`
 
-	// GatewayCall Present when the action sent a GMP call through the gateway (ITS or gateway send), absent for same-chain swaps.
-	// `<txID>-<eventIndex>` is that GMP message's id.
+	// GatewayCall The gateway `ContractCall` or `ContractCallWithToken` directly before this event in the transaction, if any.
+	// For an ITS or gateway send it's the action's GMP call, and `<txID>-<eventIndex>` is its message id.
+	// Usually absent for same-chain swaps, but present when the swap's output goes to a contract that calls the gateway itself; ignore it for same-chain swaps.
 	GatewayCall  *AxelarAppGatewayCall `json:"gatewayCall,omitempty"`
 	Meta         *EventMetadata        `json:"meta,omitempty"`
 	OutputAmount UnsignedBigInt        `json:"outputAmount"`
