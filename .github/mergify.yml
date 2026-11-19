@@ -1,7 +1,5 @@
 shared:
   mandatory_pr_checks_successful: &mandatory_pr_checks_successful
-    - "check-success=Mergify Merge Protections"
-
     - or:
         - "-files~=(go\\.mod|go\\.sum|\\.go)$"
         - and:
